@@ -7,7 +7,6 @@ import {
   Pressable,
   Image,
   Platform,
-  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -33,26 +32,23 @@ function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
+  const [message, setMessage] = useState({ text: '', type: null }); // type: 'success' | 'error'
 
   const handleLogin = async () => {
+    setMessage({ text: '', type: null });
     try {
       const response = await login(email, password);
+      console.log('response', response);
       const isSuccess = response?.status === 200;
       if (isSuccess) {
-        const message = response?.data?.message || 'Login successful';
-        Alert.alert('Success', message, [
-          {
-            text: 'OK',
-            onPress: () => {
-              setAuthenticated(response?.data);
-            },
-          },
-        ]);
+        const msg = response?.data?.message || 'Login successful';
+        setMessage({ text: msg, type: 'success' });
+        setAuthenticated(response?.data);
       } else {
-        Alert.alert('Error', response?.error || 'Login failed');
+        setMessage({ text: response?.data?.message || 'Login failed', type: 'error' });
       }
     } catch (err) {
-      Alert.alert('Error', err?.message || 'Login failed');
+      setMessage({ text: err?.message || 'Login failed', type: 'error' });
     }
   };
 
@@ -82,6 +78,30 @@ function LoginScreen({ navigation }) {
         </View>
         <Text style={styles.appName}>ManaHRMS</Text>
         <Text style={styles.tagline}>Employee Portal Login</Text>
+
+        {/* Status message - notification style */}
+        {message.text ? (
+          <View
+            style={[
+              styles.notification,
+              message.type === 'error' ? styles.notificationError : styles.notificationSuccess,
+            ]}
+          >
+            <Icon
+              name={message.type === 'error' ? 'error' : 'check-circle'}
+              size={20}
+              color={message.type === 'error' ? '#b71c1c' : '#2e7d32'}
+            />
+            <Text
+              style={[
+                styles.notificationText,
+                message.type === 'error' ? styles.notificationTextError : styles.notificationTextSuccess,
+              ]}
+            >
+              {message.text}
+            </Text>
+          </View>
+        ) : null}
 
         {/* Form */}
         <EmailInput
@@ -153,6 +173,7 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     paddingVertical: spacing.xl,
     alignItems: 'center',
+    justifyContent: 'center',
     minHeight: '100%',
   },
   card: {
@@ -232,6 +253,47 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.primary,
     fontWeight: '600',
+  },
+  notification: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: 12,
+    marginBottom: spacing.md,
+    gap: spacing.sm,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  notificationSuccess: {
+    backgroundColor: '#e8f5e9',
+    borderLeftWidth: 4,
+    borderLeftColor: '#2e7d32',
+  },
+  notificationError: {
+    backgroundColor: '#ffebee',
+    borderLeftWidth: 4,
+    borderLeftColor: '#b71c1c',
+  },
+  notificationText: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  notificationTextSuccess: {
+    color: '#1b5e20',
+  },
+  notificationTextError: {
+    color: '#b71c1c',
   },
   loginButton: {
     marginBottom: spacing.lg,

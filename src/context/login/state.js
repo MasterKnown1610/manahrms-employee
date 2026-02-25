@@ -30,12 +30,7 @@ export const LoginState = () => {
 
       return response;
     } catch (error) {
-      console.error('Error', error);
-      dispatch({
-        type: LoginActions.SET_ERROR,
-        payload: error.message || 'Failed to login',
-      });
-      return { success: false, error: error.message };
+      return error.response;
     }
   };
   

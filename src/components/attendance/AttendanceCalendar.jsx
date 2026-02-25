@@ -6,14 +6,23 @@ import { colors, spacing, borderRadius } from '../../theme/theme';
 const DAYS_HEADER = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'];
 
 function AttendanceCalendar({
-  markedDates = [], // array of date strings 'YYYY-MM-DD' that have green dot
+  markedDates = [], // array of date strings 'YYYY-MM-DD' — present (green)
+  absentDates = [], // array of date strings 'YYYY-MM-DD' — absent (red)
   selectedDate,
   onSelectDate,
+  onMonthChange, // (year: number, month: number) => void, month 1-based
 }) {
   const [currentMonth, setCurrentMonth] = useState(() => {
     const d = selectedDate ? new Date(selectedDate) : new Date();
     return new Date(d.getFullYear(), d.getMonth(), 1);
   });
+
+  React.useEffect(() => {
+    if (typeof onMonthChange !== 'function') return;
+    const y = currentMonth.getFullYear();
+    const m = currentMonth.getMonth() + 1; // 1-based for API
+    onMonthChange(y, m);
+  }, [currentMonth, onMonthChange]);
 
   const { days, monthLabel } = useMemo(() => {
     const year = currentMonth.getFullYear();
@@ -29,7 +38,8 @@ function AttendanceCalendar({
     }
     for (let d = 1; d <= daysInMonth; d++) {
       const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-      const isMarked = markedDates.includes(dateStr);
+      const isPresent = markedDates.includes(dateStr);
+      const isAbsent = absentDates.includes(dateStr);
       const isSelected =
         selectedDate &&
         selectedDate.getFullYear() === year &&
@@ -40,7 +50,8 @@ function AttendanceCalendar({
         key: dateStr,
         day: d,
         dateStr,
-        isMarked,
+        isPresent,
+        isAbsent,
         isSelected,
       });
     }
@@ -49,13 +60,25 @@ function AttendanceCalendar({
       year: 'numeric',
     });
     return { days, monthLabel };
-  }, [currentMonth, selectedDate, markedDates]);
+  }, [currentMonth, selectedDate, markedDates, absentDates]);
 
   const goPrev = () => {
-    setCurrentMonth((m) => new Date(m.getFullYear(), m.getMonth() - 1, 1));
+    setCurrentMonth((m) => {
+      const next = new Date(m.getFullYear(), m.getMonth() - 1, 1);
+      if (typeof onMonthChange === 'function') {
+        onMonthChange(next.getFullYear(), next.getMonth() + 1);
+      }
+      return next;
+    });
   };
   const goNext = () => {
-    setCurrentMonth((m) => new Date(m.getFullYear(), m.getMonth() + 1, 1));
+    setCurrentMonth((m) => {
+      const next = new Date(m.getFullYear(), m.getMonth() + 1, 1);
+      if (typeof onMonthChange === 'function') {
+        onMonthChange(next.getFullYear(), next.getMonth() + 1);
+      }
+      return next;
+    });
   };
 
   const handleDayPress = (item) => {
@@ -88,21 +111,29 @@ function AttendanceCalendar({
             <Pressable
               key={item.key}
               onPress={() => handleDayPress(item)}
-              style={[styles.cell, styles.cellDay, item.isSelected && styles.cellSelected]}
+              style={[
+                styles.cell,
+                styles.cellDay,
+                item.isSelected && styles.cellSelected,
+              ]}
             >
               <Text
                 style={[
                   styles.cellDayText,
                   item.isSelected && styles.cellDayTextSelected,
+                  item.isPresent && !item.isSelected && styles.cellDayTextPresent,
+                  item.isAbsent && !item.isSelected && styles.cellDayTextAbsent,
                 ]}
               >
                 {item.day}
               </Text>
-              {item.isMarked && (
+              {(item.isPresent || item.isAbsent) && (
                 <View
                   style={[
                     styles.dot,
-                    item.isSelected ? styles.dotSelected : styles.dotGreen,
+                    item.isSelected && styles.dotSelected,
+                    item.isPresent && !item.isSelected && styles.dotGreen,
+                    item.isAbsent && !item.isSelected && styles.dotRed,
                   ]}
                 />
               )}
@@ -172,6 +203,12 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontWeight: '700',
   },
+  cellDayTextPresent: {
+    color: colors.success,
+  },
+  cellDayTextAbsent: {
+    color: colors.error,
+  },
   dot: {
     width: 4,
     height: 4,
@@ -180,6 +217,9 @@ const styles = StyleSheet.create({
   },
   dotGreen: {
     backgroundColor: colors.success,
+  },
+  dotRed: {
+    backgroundColor: colors.error,
   },
   dotSelected: {
     backgroundColor: colors.primary,

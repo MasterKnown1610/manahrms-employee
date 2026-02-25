@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { View, ScrollView, StyleSheet } from 'react-native';
+import React, { useState, useContext, useCallback } from 'react';
+import { ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   AttendanceHeader,
   AttendanceStatusCard,
@@ -32,32 +33,97 @@ function formatDateLabel(date) {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
+function getTimeFromPayload(payload) {
+  if (!payload) return null;
+  if (typeof payload === 'string') {
+    const d = new Date(payload);
+    return isNaN(d.getTime()) ? payload : formatTime(d);
+  }
+  const time =
+    payload.punchInTime ??
+    payload.punchOutTime ??
+    payload.inTime ??
+    payload.outTime ??
+    payload.time ??
+    payload.createdAt;
+  if (!time) return null;
+  const d = new Date(time);
+  return isNaN(d.getTime()) ? time : formatTime(d);
+}
+
 function AttendanceScreen({ navigation }) {
   const {
     attendence: {
       punchIn,
       punchOut,
       lastPunchIn,
+      lastPunchOut,
+      todayAttendance,
+      fetchTodayAttendance,
+      fetchCalendar,
+      calendarAttendance,
       loading,
       error,
     } = {},
   } = useContext(Context);
-  const [currentTime, setCurrentTime] = useState(() => formatTime(new Date()));
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const isCheckedIn = !!lastPunchIn;
 
-  // Mock marked dates (days with attendance)
-  const markedDates = [
-    '2024-10-01', '2024-10-02', '2024-10-03', '2024-10-04', '2024-10-05',
-    '2024-10-06', '2024-10-07', '2024-10-08', '2024-10-09', '2024-10-10',
-    '2024-10-11', '2024-10-14', '2024-10-15', '2024-10-16', '2024-10-17',
-    '2024-10-18', '2024-10-21', '2024-10-22', '2024-10-23', '2024-10-24',
-  ];
+  useFocusEffect(
+    useCallback(() => {
+      if (typeof fetchTodayAttendance === 'function') {
+        fetchTodayAttendance();
+      }
+      // Calendar API is fetched when AttendanceCalendar mounts or month changes (onMonthChange)
+      if (typeof fetchCalendar === 'function') {
+        const now = new Date();
+        fetchCalendar(now.getFullYear(), now.getMonth() + 1);
+      }
+    }, []),
+  );
 
-  useEffect(() => {
-    const id = setInterval(() => setCurrentTime(formatTime(new Date())), 1000);
-    return () => clearInterval(id);
-  }, []);
+  const handleCalendarMonthChange = useCallback(
+    (year, month) => {
+      if (typeof fetchCalendar === 'function') {
+        fetchCalendar(year, month);
+      }
+    },
+    [],
+  );
+
+  const isCheckedIn = !!lastPunchIn && !lastPunchOut;
+  const alreadyCheckedOut = !!lastPunchOut;
+  const punchInTime =
+    getTimeFromPayload(
+      todayAttendance?.punch_in_time ??
+        todayAttendance?.punchInTime ??
+        todayAttendance?.punchIn ??
+        todayAttendance?.inTime ??
+        lastPunchIn?.data ??
+        lastPunchIn,
+    ) ?? null;
+  const punchOutTime =
+    getTimeFromPayload(
+      todayAttendance?.punch_out_time ??
+        todayAttendance?.punchOutTime ??
+        todayAttendance?.punchOut ??
+        todayAttendance?.outTime ??
+        lastPunchOut?.data ??
+        lastPunchOut,
+    ) ?? null;
+
+  const markedDates = React.useMemo(() => {
+    const dates = calendarAttendance?.presentDates ?? calendarAttendance?.present_dates ?? [];
+    return Array.isArray(dates)
+      ? dates.map((d) => (typeof d === 'string' ? d : d?.date ?? String(d)))
+      : [];
+  }, [calendarAttendance?.presentDates, calendarAttendance?.present_dates]);
+
+  const absentDates = React.useMemo(() => {
+    const dates = calendarAttendance?.absentDates ?? calendarAttendance?.absent_dates ?? [];
+    return Array.isArray(dates)
+      ? dates.map((d) => (typeof d === 'string' ? d : d?.date ?? String(d)))
+      : [];
+  }, [calendarAttendance?.absentDates, calendarAttendance?.absent_dates]);
 
   const handleBack = () => {
     navigation.goBack();
@@ -70,15 +136,26 @@ function AttendanceScreen({ navigation }) {
   const handleCheckIn = async () => {
     if (typeof punchIn !== 'function') return;
     try {
-      await punchIn();
+      const response = await punchIn();
+      if (response?.success === false) {
+        // Error already dispatched in context (e.g. double punch), shown via checkInError
+        return;
+      }
     } catch (err) {
       // Error is stored in attendance context (SET_ERROR)
     }
   };
 
   const handleCheckOut = async () => {
-    if (typeof punchOut === 'function') {
-      await punchOut();
+    if (typeof punchOut !== 'function') return;
+    try {
+      const response = await punchOut();
+      if (response?.success === false) {
+        // Error already dispatched in context (e.g. double punch), shown via checkInError
+        return;
+      }
+    } catch (err) {
+      // Error is stored in attendance context (SET_ERROR)
     }
   };
 
@@ -103,20 +180,26 @@ function AttendanceScreen({ navigation }) {
       
         <AttendanceStatusCard
           dateLabel={formatDateLabel(new Date())}
-          status="ON TIME"
-          currentTime={currentTime}
-          location="TechPark, Block B, 4th Floor, San Franci..."
           onCheckIn={handleCheckIn}
           onCheckOut={handleCheckOut}
           isCheckedIn={isCheckedIn}
           checkInLoading={loading}
           checkInError={error}
+          punchInTime={punchInTime}
+          punchOutTime={punchOutTime}
+          alreadyCheckedOut={alreadyCheckedOut}
         />
-        <MonthlySummaryCards workDays={22} present={18} absent={1} />
+        <MonthlySummaryCards
+          workDays={calendarAttendance?.workDays ?? 0}
+          present={calendarAttendance?.present ?? 0}
+          absent={calendarAttendance?.absent ?? 0}
+        />
         <AttendanceCalendar
           markedDates={markedDates}
+          absentDates={absentDates}
           selectedDate={selectedDate}
           onSelectDate={setSelectedDate}
+          onMonthChange={handleCalendarMonthChange}
         />
         <RecentLogsSection onViewAll={handleViewAllLogs} />
       </ScrollView>

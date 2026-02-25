@@ -10,7 +10,6 @@ const attendenceHandlers = {
   PUNCH_OUT: (state, action) => ({
     ...state,
     punchOut: action.payload,
-    punchIn: null,
     loading: false,
     error: null,
   }),
@@ -22,6 +21,18 @@ const attendenceHandlers = {
     ...state,
     loading: false,
     error: action.payload,
+  }),
+  SET_TODAY_ATTENDANCE: (state, action) => ({
+    ...state,
+    todayAttendance: action.payload,
+    loading: false,
+    error: null,
+  }),
+  SET_CALENDAR_ATTENDANCE: (state, action) => ({
+    ...state,
+    calendarAttendance: action.payload,
+    loading: false,
+    error: null,
   }),
 }
 
