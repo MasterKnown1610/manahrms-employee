@@ -21,7 +21,6 @@ const styles = StyleSheet.create({
   wrapper: {
     alignItems: 'center',
     width: 76,
-    marginRight: spacing.lg,
   },
   circle: {
     width: BUTTON_SIZE,

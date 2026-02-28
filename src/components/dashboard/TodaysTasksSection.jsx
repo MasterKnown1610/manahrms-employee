@@ -3,49 +3,36 @@ import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { colors, spacing } from '../../theme/theme';
 import TaskItem from './TaskItem';
 
-const DEFAULT_TASKS = [
-  {
-    id: '1',
-    title: 'Submit Monthly Expense Report',
-    priority: 'high',
-    completed: false,
-  },
-  {
-    id: '2',
-    title: 'Update CRM Client Contacts',
-    priority: 'medium',
-    completed: false,
-  },
-  {
-    id: '3',
-    title: 'Draft Q4 Strategic Roadmap',
-    priority: 'completed',
-    completed: true,
-  },
-];
-
 function TodaysTasksSection({
-  tasks = DEFAULT_TASKS,
+  tasks = [],
   onViewAll,
   onTaskPress,
   onTaskCheck,
+  sectionTitle = "Today's Tasks",
 }) {
+  const mappedTasks = tasks.map((task) => ({
+    ...task,
+    completed: task.status === 'closed',
+  }));
+
   return (
     <View style={styles.section}>
       <View style={styles.header}>
-        <Text style={styles.sectionTitle}>Today's Tasks</Text>
+        <Text style={styles.sectionTitle}>{sectionTitle}</Text>
         <Pressable onPress={onViewAll} hitSlop={8}>
           <Text style={styles.viewAll}>View All</Text>
         </Pressable>
       </View>
-      {tasks.map((task) => (
+      {mappedTasks.map((task) => (
         <TaskItem
           key={task.id}
           title={task.title}
-          priority={task.priority}
+          priority={task.priority ?? 'medium'}
           completed={task.completed}
+          status={task.status}
           onPress={() => onTaskPress?.(task)}
           onCheckPress={() => onTaskCheck?.(task)}
+          showCheckbox={false}
         />
       ))}
     </View>

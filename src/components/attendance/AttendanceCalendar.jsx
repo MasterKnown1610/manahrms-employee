@@ -31,6 +31,8 @@ function AttendanceCalendar({
     const lastDay = new Date(year, month + 1, 0);
     const startPadding = (firstDay.getDay() + 6) % 7; // Monday = 0
     const daysInMonth = lastDay.getDate();
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
     const days = [];
     for (let i = 0; i < startPadding; i++) {
@@ -38,8 +40,10 @@ function AttendanceCalendar({
     }
     for (let d = 1; d <= daysInMonth; d++) {
       const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      const isToday = dateStr === todayStr;
+      const isFuture = dateStr > todayStr;
       const isPresent = markedDates.includes(dateStr);
-      const isAbsent = absentDates.includes(dateStr);
+      const isAbsent = !isFuture && (absentDates.includes(dateStr) || (isToday && !isPresent));
       const isSelected =
         selectedDate &&
         selectedDate.getFullYear() === year &&
@@ -52,6 +56,7 @@ function AttendanceCalendar({
         dateStr,
         isPresent,
         isAbsent,
+        isFuture,
         isSelected,
       });
     }
@@ -121,19 +126,21 @@ function AttendanceCalendar({
                 style={[
                   styles.cellDayText,
                   item.isSelected && styles.cellDayTextSelected,
-                  item.isPresent && !item.isSelected && styles.cellDayTextPresent,
-                  item.isAbsent && !item.isSelected && styles.cellDayTextAbsent,
+                  item.isPresent && styles.cellDayTextPresent,
+                  item.isAbsent && styles.cellDayTextAbsent,
+                  item.isFuture && styles.cellDayTextFuture,
                 ]}
               >
                 {item.day}
               </Text>
-              {(item.isPresent || item.isAbsent) && (
+              {(item.isPresent || item.isAbsent || item.isFuture) && (
                 <View
                   style={[
                     styles.dot,
                     item.isSelected && styles.dotSelected,
-                    item.isPresent && !item.isSelected && styles.dotGreen,
-                    item.isAbsent && !item.isSelected && styles.dotRed,
+                    item.isPresent && styles.dotGreen,
+                    item.isAbsent && styles.dotRed,
+                    item.isFuture && styles.dotFuture,
                   ]}
                 />
               )}
@@ -209,6 +216,9 @@ const styles = StyleSheet.create({
   cellDayTextAbsent: {
     color: colors.error,
   },
+  cellDayTextFuture: {
+    color: colors.textSecondary,
+  },
   dot: {
     width: 4,
     height: 4,
@@ -220,6 +230,9 @@ const styles = StyleSheet.create({
   },
   dotRed: {
     backgroundColor: colors.error,
+  },
+  dotFuture: {
+    backgroundColor: colors.textSecondary,
   },
   dotSelected: {
     backgroundColor: colors.primary,

@@ -33,7 +33,86 @@ const BALANCES = [
   },
 ];
 
-function BalanceCard({ label, icon, iconColor, used, total, barColor }) {
+function pickMetaForKeyOrLabel(key, label) {
+  const k = String(key ?? '').toLowerCase();
+  const l = String(label ?? '').toLowerCase();
+  const text = `${k} ${l}`;
+  if (text.includes('sick')) {
+    return { icon: 'work', iconColor: colors.success, barColor: colors.success };
+  }
+  if (text.includes('casual')) {
+    return { icon: 'wb-sunny', iconColor: colors.priorityMedium, barColor: colors.priorityMedium };
+  }
+  if (text.includes('annual') || text.includes('vacation')) {
+    return { icon: 'event', iconColor: colors.primary, barColor: colors.primary };
+  }
+  return { icon: 'event-available', iconColor: colors.primary, barColor: colors.primary };
+}
+
+function normalizeBalanceItem(item, fallbackKey) {
+  const obj = item ?? {};
+  const key =
+    obj.key ??
+    obj.code ??
+    obj.type ??
+    obj.leave_type_id ??
+    obj.leaveTypeId ??
+    fallbackKey;
+  const label =
+    obj.label ??
+    obj.name ??
+    obj.type ??
+    obj.leave_type_name ??
+    obj.leaveTypeName ??
+    obj.leaveType ??
+    'Leave';
+
+  const rawTotal =
+    obj.total ??
+    obj.total_leave ??
+    obj.totalLeaves ??
+    obj.entitled ??
+    obj.entitlement ??
+    obj.total_days ??
+    0;
+  const rawUsed =
+    obj.used ??
+    obj.used_leave ??
+    obj.usedLeaves ??
+    obj.taken ??
+    obj.consumed ??
+    obj.used_days ??
+    0;
+
+  const totalNum = parseFloat(rawTotal);
+  const usedNum = parseFloat(rawUsed);
+  const total = Number.isFinite(totalNum) ? totalNum : 0;
+  const used = Number.isFinite(usedNum) ? usedNum : 0;
+
+  const remainingRaw =
+    obj.remaining ??
+    obj.remaining_leave ??
+    obj.remainingLeaves ??
+    obj.balance ??
+    (total - used);
+
+  const remaining = remainingRaw < 0 ? 0 : remainingRaw;
+
+  const meta = pickMetaForKeyOrLabel(key, label);
+
+  return {
+    key: String(key ?? fallbackKey),
+    label: String(label),
+    total: Number.isFinite(total) ? total : 0,
+    used: Number.isFinite(used) ? used : 0,
+    remaining: Number.isFinite(remaining) ? remaining : 0,
+    icon: meta.icon,
+    iconColor: meta.iconColor,
+    barColor: meta.barColor,
+  };
+}
+
+function BalanceCard({ label, icon, iconColor, used, total, remaining, barColor }) {
   const pct = total > 0 ? (used / total) * 100 : 0;
   return (
     <View style={styles.card}>
@@ -43,6 +122,7 @@ function BalanceCard({ label, icon, iconColor, used, total, barColor }) {
         <Text style={[styles.ratioUsed, { color: barColor }]}>{used}</Text>
         <Text style={styles.ratioTotal}> / {total}</Text>
       </View>
+      <Text style={styles.remainingText}>Remaining: {remaining}</Text>
       <View style={styles.progressWrap}>
         <View style={[styles.progressFill, { width: `${pct}%`, backgroundColor: barColor }]} />
       </View>
@@ -50,7 +130,17 @@ function BalanceCard({ label, icon, iconColor, used, total, barColor }) {
   );
 }
 
-function LeaveBalancesSection() {
+function LeaveBalancesSection({ items }) {
+  const source = items ?? BALANCES;
+  const list = Array.isArray(source)
+    ? source
+    : (source?.data ?? source?.balances ?? source?.leaveBalances ?? source?.leave_balances ?? []);
+
+  const normalized =
+    list && Array.isArray(list)
+      ? list.map((it, idx) => normalizeBalanceItem(it, idx))
+      : BALANCES;
+
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>YOUR BALANCES</Text>
@@ -59,7 +149,7 @@ function LeaveBalancesSection() {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {BALANCES.map((b) => (
+        {normalized.map((b) => (
           <BalanceCard
             key={b.key}
             label={b.label}
@@ -67,6 +157,7 @@ function LeaveBalancesSection() {
             iconColor={b.iconColor}
             used={b.used}
             total={b.total}
+            remaining={b.remaining}
             barColor={b.barColor}
           />
         ))}
@@ -121,6 +212,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     color: colors.text,
+  },
+  remainingText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: colors.textSecondary,
+    marginBottom: spacing.sm,
   },
   progressWrap: {
     height: 6,

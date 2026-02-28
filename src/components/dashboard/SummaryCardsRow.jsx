@@ -14,6 +14,20 @@ const CARD_CONFIG = [
   { id: 'completed', icon: 'check-circle', color: '#4CAF50', label: 'Completed', valueKeys: ['completed'] },
 ];
 
+const ADMIN_CARD_CONFIG = [
+  { id: 'total-employees', icon: 'people', color: '#2196F3', label: 'Total Employees', valueKey: 'total_employees' },
+  { id: 'active-employees', icon: 'person', color: '#4CAF50', label: 'Active Employees', valueKey: 'active_employees' },
+  { id: 'total-departments', icon: 'business', color: '#7B1FA2', label: 'Departments', valueKey: 'total_departments' },
+  { id: 'total-projects', icon: 'work', color: '#FF9800', label: 'Projects', valueKey: 'total_projects' },
+  { id: 'active-projects', icon: 'folder', color: '#4CAF50', label: 'Active Projects', valueKey: 'active_projects' },
+  { id: 'total-tasks', icon: 'assignment', color: '#7B1FA2', label: 'Total Tasks', valueKey: 'total_tasks' },
+  { id: 'open-tasks', icon: 'more-horiz', color: '#FF9800', label: 'Open Tasks', valueKey: 'open_tasks' },
+  { id: 'in-progress-tasks', icon: 'schedule', color: '#2196F3', label: 'In Progress', valueKey: 'in_progress_tasks' },
+  { id: 'closed-tasks', icon: 'check-circle', color: '#4CAF50', label: 'Closed Tasks', valueKey: 'closed_tasks' },
+  { id: 'overdue-tasks', icon: 'warning', color: '#f44336', label: 'Overdue Tasks', valueKey: 'overdue_tasks' },
+  { id: 'pending-leave', icon: 'event', color: '#2196F3', label: 'Pending Leave', valueKey: 'pending_leave_requests' },
+];
+
 const DEFAULT_VALUES = {
   'my-tasks': '0',
   'todays-status': '—',
@@ -23,6 +37,10 @@ const DEFAULT_VALUES = {
   'in-progress': '0',
   'completed': '0',
 };
+
+function isAdminDashboard(dashboard) {
+  return dashboard?.overview != null;
+}
 
 function getValueFromDashboard(dashboard, valueKeys) {
   const source = dashboard?.summary ?? dashboard ?? {};
@@ -51,7 +69,24 @@ function getMyProjectsCount(dashboard) {
   return null;
 }
 
+function buildAdminCardsFromDashboard(dashboard) {
+  const overview = dashboard?.overview ?? {};
+  return ADMIN_CARD_CONFIG.map((config) => {
+    const v = overview[config.valueKey];
+    const value = v !== undefined && v !== null ? String(v) : '0';
+    return {
+      id: config.id,
+      icon: <Icon name={config.icon} size={28} color={config.color} />,
+      label: config.label,
+      value,
+    };
+  });
+}
+
 function buildCardsFromDashboard(dashboard) {
+  if (isAdminDashboard(dashboard)) {
+    return buildAdminCardsFromDashboard(dashboard);
+  }
   return CARD_CONFIG.map((config) => {
     let value = null;
     if (config.id === 'leave-balance') {

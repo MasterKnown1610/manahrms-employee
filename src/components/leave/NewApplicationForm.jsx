@@ -1,19 +1,35 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, Pressable } from 'react-native';
 import Icon from '../Icon/Icon';
+import DatePickerField from '../DatePickerField';
 import { colors, spacing, borderRadius } from '../../theme/theme';
+
+function getLeaveTypeLabel(item) {
+  if (item == null) return '';
+  return typeof item === 'object' ? (item?.name ?? item?.label ?? item?.type ?? '') : String(item);
+}
 
 function NewApplicationForm({
   leaveType,
-  onLeaveTypePress,
+  leaveTypes = [],
+  onLeaveTypeSelect,
   startDate,
   endDate,
-  onStartDatePress,
-  onEndDatePress,
+  onStartDateChange,
+  onEndDateChange,
+  minEndDate,
   reason,
   onReasonChange,
   onAttachmentPress,
 }) {
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  const handleLeaveTypePress = () => setDropdownOpen((v) => !v);
+  const handleSelect = (item) => {
+    onLeaveTypeSelect?.(item);
+    setDropdownOpen(false);
+  };
+
   return (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
@@ -21,35 +37,57 @@ function NewApplicationForm({
         <Text style={styles.sectionTitle}>New Application</Text>
       </View>
 
-      <Pressable onPress={onLeaveTypePress} style={styles.field}>
+      <View style={styles.field}>
         <Text style={styles.label}>LEAVE TYPE</Text>
-        <View style={styles.inputRow}>
+        <Pressable onPress={handleLeaveTypePress} style={styles.inputRow}>
           <Text style={[styles.inputText, !leaveType && styles.placeholder]}>
             {leaveType || 'Select Leave Type'}
           </Text>
           <Icon name="keyboard-arrow-down" size={22} color={colors.textSecondary} />
-        </View>
-      </Pressable>
+        </Pressable>
+        {dropdownOpen && leaveTypes.length > 0 && (
+          <View style={styles.dropdown}>
+            {leaveTypes.map((item, index) => {
+              const label = getLeaveTypeLabel(item);
+              const isLast = index === leaveTypes.length - 1;
+              return (
+                <Pressable
+                  key={item?.id ?? index}
+                  style={[
+                    styles.dropdownOption,
+                    leaveType === label && styles.dropdownOptionActive,
+                    isLast && styles.dropdownOptionLast,
+                  ]}
+                  onPress={() => handleSelect(item)}
+                >
+                  <Text style={[styles.dropdownOptionText, leaveType === label && styles.dropdownOptionTextActive]}>
+                    {label}
+                  </Text>
+                  {leaveType === label && <Icon name="check" size={20} color={colors.primary} />}
+                </Pressable>
+              );
+            })}
+          </View>
+        )}
+      </View>
 
       <View style={styles.row}>
-        <Pressable onPress={onStartDatePress} style={[styles.field, styles.half]}>
-          <Text style={styles.label}>START DATE</Text>
-          <View style={styles.inputRow}>
-            <Text style={[styles.inputText, !startDate && styles.placeholder]}>
-              {startDate || 'mm/dd/yyyy'}
-            </Text>
-            <Icon name="event" size={20} color={colors.textSecondary} />
-          </View>
-        </Pressable>
-        <Pressable onPress={onEndDatePress} style={[styles.field, styles.half]}>
-          <Text style={styles.label}>END DATE</Text>
-          <View style={styles.inputRow}>
-            <Text style={[styles.inputText, !endDate && styles.placeholder]}>
-              {endDate || 'mm/dd/yyyy'}
-            </Text>
-            <Icon name="event" size={20} color={colors.textSecondary} />
-          </View>
-        </Pressable>
+        <DatePickerField
+          label="START DATE"
+          value={startDate}
+          onChange={onStartDateChange}
+          placeholder="mm/dd/yyyy"
+          minimumDate={new Date()}
+          containerStyle={styles.half}
+        />
+        <DatePickerField
+          label="END DATE"
+          value={endDate}
+          onChange={onEndDateChange}
+          placeholder="mm/dd/yyyy"
+          minimumDate={minEndDate}
+          containerStyle={styles.half}
+        />
       </View>
 
       <View style={styles.field}>
@@ -66,13 +104,7 @@ function NewApplicationForm({
         />
       </View>
 
-      <Pressable onPress={onAttachmentPress} style={styles.attachmentBox}>
-        <Text style={styles.label}>ATTACHMENT (OPTIONAL)</Text>
-        <View style={styles.attachmentInner}>
-          <Icon name="add-circle-outline" size={48} color={colors.placeholder} />
-          <Text style={styles.attachmentHint}>PDF, JPG or PNG upto 5MB</Text>
-        </View>
-      </Pressable>
+     
     </View>
   );
 }
@@ -120,6 +152,37 @@ const styles = StyleSheet.create({
   },
   placeholder: {
     color: colors.placeholder,
+  },
+  dropdown: {
+    marginTop: spacing.xs,
+    backgroundColor: colors.backgroundInput,
+    borderRadius: borderRadius.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+    overflow: 'hidden',
+  },
+  dropdownOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  dropdownOptionActive: {
+    backgroundColor: colors.primaryLight ?? `${colors.primary}15`,
+  },
+  dropdownOptionLast: {
+    borderBottomWidth: 0,
+  },
+  dropdownOptionText: {
+    fontSize: 15,
+    color: colors.text,
+  },
+  dropdownOptionTextActive: {
+    fontWeight: '600',
+    color: colors.primary,
   },
   row: {
     flexDirection: 'row',

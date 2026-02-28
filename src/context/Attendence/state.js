@@ -9,6 +9,8 @@ export const initialState = {
   attendence: null,
   todayAttendance: null,
   calendarAttendance: null, // { workDays, present, absent, presentDates?, absentDates? }
+  presentAttendance: null, // present list for a given date
+  attendanceStats: null,
   loading: false,
   error: null,
 };
@@ -126,11 +128,14 @@ export const AttendenceState = () => {
       });
       const raw = response?.data?.data ?? response?.data ?? {};
       const daysArray = raw.days ?? [];
+      const today = new Date();
+      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
       const presentFromDays = daysArray.filter((d) => d.is_present === true).map((d) => d.date);
-      const absentFromDays = daysArray.filter((d) => d.is_present === false).map((d) => d.date);
+      const pastOrTodayAbsent = daysArray.filter((d) => d.is_present === false && (d.date && d.date <= todayStr));
+      const absentFromDays = pastOrTodayAbsent.map((d) => d.date);
       const payload = {
-        workDays: raw.workDays ?? raw.work_days ?? raw.total_present_days ?? 0,
-        present: raw.present ?? raw.total_present_days ?? presentFromDays.length,
+        workDays: daysArray.length > 0 ? daysArray.length : (raw.workDays ?? raw.work_days ?? 0),
+        present: raw.present ?? presentFromDays.length,
         absent: raw.absent ?? absentFromDays.length,
         presentDates: raw.presentDates ?? raw.present_dates ?? raw.presentDatesList ?? presentFromDays,
         absentDates: raw.absentDates ?? raw.absent_dates ?? raw.absentDatesList ?? absentFromDays,
@@ -149,6 +154,53 @@ export const AttendenceState = () => {
     }
   };
 
+  const fetchPresentAttendance = async (date) => {
+    try {
+      if (!token) return;
+      const response = await axios.get(`${API_URLS.Attendance}/present`, {
+        params: { date },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = response?.data?.data ?? response?.data;
+      dispatch({
+        type: AttendanceActions.SET_PRESENT_ATTENDANCE,
+        payload: data,
+      });
+      return data;
+    } catch (error) {
+      const message =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message;
+      dispatch({ type: AttendanceActions.SET_ERROR, payload: message });
+    }
+  };
+
+  const fetchAttendanceStats = async () => {
+    try {
+      if (!token) return;
+      const response = await axios.get(`${API_URLS.Attendance}/stats`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = response?.data?.data ?? response?.data;
+      dispatch({
+        type: AttendanceActions.SET_ATTENDANCE_STATS,
+        payload: data,
+      });
+      return data;
+    } catch (error) {
+      const message =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message;
+      dispatch({ type: AttendanceActions.SET_ERROR, payload: message });
+    }
+  };
+
   return {
     ...state,
     lastPunchIn: state.punchIn,
@@ -157,6 +209,8 @@ export const AttendenceState = () => {
     punchOut,
     fetchTodayAttendance,
     fetchCalendar,
+    fetchPresentAttendance,
+    fetchAttendanceStats,
   };
 };
 

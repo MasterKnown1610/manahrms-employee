@@ -11,6 +11,8 @@
     "bundle:android": "cd android && JAVA_HOME=\"/Applications/Android Studio.app/Contents/jbr/Contents/Home\" ./gradlew bundleRelease"
   },
   "dependencies": {
+    "@react-native-async-storage/async-storage": "^3.0.1",
+    "@react-native-community/datetimepicker": "^8.6.0",
     "@react-native/new-app-screen": "0.84.0",
     "@react-navigation/drawer": "^7.8.1",
     "@react-navigation/native": "^7.1.28",

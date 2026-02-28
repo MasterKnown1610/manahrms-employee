@@ -1,23 +1,39 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { View, Text, StyleSheet, Pressable, Image } from 'react-native';
 import { DrawerContentScrollView } from '@react-navigation/drawer';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from '../components/Icon/Icon';
 import { colors, spacing, borderRadius } from '../theme/theme';
+import { useAuth } from '../context/AuthContext';
+import Context from '../context/Context';
 
 const DRAWER_WIDTH = 280;
 
-const MENU_ITEMS = [
+function getRoleFromContext(loginContext) {
+  const profile = loginContext?.profile?.data ?? loginContext?.profile;
+  const loginData = loginContext?.loginData?.user ?? loginContext?.loginData;
+  return profile?.role ?? loginData?.role ?? 'employee';
+}
+
+const EMPLOYEE_MENU_ITEMS = [
+  { key: 'Dashboard', label: 'Dashboard', icon: 'dashboard' },
+  { key: 'Attendance', label: 'Attendance', icon: 'event' },
+  { key: 'Tasks', label: 'Tasks', icon: 'assignment' },
+  { key: 'Leaves', label: 'Leaves', icon: 'description' },
+  { key: 'Projects', label: 'Projects', icon: 'send' },
+  { key: 'AIChat', label: 'AI Chat', icon: 'smart-toy' },
+  { key: 'Settings', label: 'Settings', icon: 'settings' },
+];
+
+const ADMIN_MENU_ITEMS = [
   { key: 'Dashboard', label: 'Dashboard', icon: 'dashboard' },
   { key: 'Attendance', label: 'Attendance', icon: 'event' },
   { key: 'Tasks', label: 'Tasks', icon: 'assignment' },
   { key: 'Leaves', label: 'Leaves', icon: 'description' },
   { key: 'Employee', label: 'Employee', icon: 'people' },
-  { key: 'Department', label: 'Department', icon: 'business' },
+  { key: 'Departments', label: 'Departments', icon: 'business' },
   { key: 'Projects', label: 'Projects', icon: 'send' },
-  { key: 'Reports', label: 'Reports', icon: 'bar-chart' },
-  { key: 'Calendar', label: 'Calendar', icon: 'calendar-today' },
-  { key: 'Messaging', label: 'Messaging', icon: 'mail', showBadge: true },
+  { key: 'AIChat', label: 'AI Chat', icon: 'smart-toy' },
   { key: 'Settings', label: 'Settings', icon: 'settings' },
 ];
 
@@ -32,17 +48,29 @@ const BOTTOM_TABS = [
 function CustomDrawerContent(props) {
   const { navigation, state } = props;
   const insets = useSafeAreaInsets();
+  const { logout } = useAuth();
+  const combinedState = useContext(Context);
+  const loginContext = combinedState?.login ?? {};
+  const role = getRoleFromContext(loginContext);
+  const menuItems = role === 'admin' ? ADMIN_MENU_ITEMS : EMPLOYEE_MENU_ITEMS;
+
+  const profile = loginContext?.profile?.data ?? loginContext?.profile;
+  const loginData = loginContext?.loginData?.user ?? loginContext?.loginData;
+  const userName = profile?.full_name ?? profile?.name ?? loginData?.full_name ?? loginData?.name ?? 'User';
+  const userRoleLabel = role === 'admin' ? 'Admin' : 'Employee';
 
   const nestedState = state?.routes?.[state.index]?.state;
   const activeScreen = nestedState?.routes?.[nestedState.index]?.name ?? 'Dashboard';
   const activeBottomTab = activeScreen === 'Profile' ? 'Profile' : 'Home';
 
+  const mainScreens = ['Dashboard', 'Profile', 'Attendance', 'Tasks', 'Leaves', 'AIChat'];
   const navigateTo = (screenKey) => {
     navigation.closeDrawer();
-    if (['Dashboard', 'Profile', 'Attendance', 'Tasks', 'Leaves'].includes(screenKey)) {
+    if (mainScreens.includes(screenKey)) {
       const screenName = screenKey === 'Leaves' ? 'Leave' : screenKey;
       navigation.navigate('Main', { screen: screenName });
     } else {
+      // Employee, Departments, Projects, Settings - go to Dashboard for now if no dedicated screen
       navigation.navigate('Main', { screen: 'Dashboard' });
     }
   };
@@ -54,6 +82,11 @@ function CustomDrawerContent(props) {
     } else {
       navigation.navigate('Main', { screen: 'Dashboard' });
     }
+  };
+
+  const handleLogout = () => {
+    navigation.closeDrawer();
+    logout();
   };
 
   return (
@@ -87,14 +120,14 @@ function CustomDrawerContent(props) {
             <Icon name="person" size={28} color={colors.textSecondary} />
           </View>
           <View style={styles.userInfo}>
-            <Text style={styles.userName}>Kisa Rivera</Text>
-            <Text style={styles.userRole}>HR Manager</Text>
+            <Text style={styles.userName}>{userName}</Text>
+            <Text style={styles.userRole}>{userRoleLabel}</Text>
           </View>
         </View>
 
         {/* Menu Items */}
         <View style={styles.menu}>
-          {MENU_ITEMS.map((item) => {
+          {menuItems.map((item) => {
             const isActive = activeScreen === item.key || (item.key === 'Leaves' && activeScreen === 'Leave');
             return (
               <Pressable
@@ -121,6 +154,12 @@ function CustomDrawerContent(props) {
             );
           })}
         </View>
+
+        {/* Logout */}
+        <Pressable onPress={handleLogout} style={styles.logoutItem}>
+          <Icon name="logout" size={22} color={colors.error} />
+          <Text style={styles.logoutLabel}>Logout</Text>
+        </Pressable>
       </DrawerContentScrollView>
 
       
@@ -224,6 +263,22 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
     backgroundColor: colors.primary,
+  },
+  logoutItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.sm + 2,
+    paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.sm,
+    marginTop: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  logoutLabel: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: colors.error,
+    marginLeft: spacing.md,
   },
   bottomBar: {
     position: 'absolute',

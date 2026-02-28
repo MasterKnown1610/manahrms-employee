@@ -16,6 +16,12 @@ const dashboardHandlers = {
     loading: false,
     error: action.payload,
   }),
+  SET_DASHBOARD_ADMIN_OVERVIEW: (state, action) => ({
+    ...state,
+    dashboardAdminOverview: action.payload,
+    loading: false,
+    error: null,
+  }),
 }
 
 const  Reducer = (state, action) => {

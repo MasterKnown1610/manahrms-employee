@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
 import Icon from '../Icon/Icon';
 import { colors, spacing, borderRadius } from '../../theme/theme';
 
@@ -9,6 +9,7 @@ function AttendanceStatusCard({
   onCheckOut,
   isCheckedIn = false,
   checkInLoading = false,
+  checkOutLoading = false,
   checkInError = null,
   punchInTime = null,
   punchOutTime = null,
@@ -41,10 +42,14 @@ function AttendanceStatusCard({
               style={[styles.inlineButton, styles.checkInButton, checkInLoading && styles.buttonDisabled]}
               disabled={checkInLoading}
             >
-              <Icon name="schedule" size={20} color={colors.background} />
-              <Text style={styles.buttonLabel}>
-                {checkInLoading ? 'Checking in...' : 'Check In'}
-              </Text>
+              {checkInLoading ? (
+                <ActivityIndicator color={colors.background} size="small" />
+              ) : (
+                <>
+                  <Icon name="schedule" size={20} color={colors.background} />
+                  <Text style={styles.buttonLabel}>Check In</Text>
+                </>
+              )}
             </Pressable>
           ) : null}
         </View>
@@ -56,9 +61,19 @@ function AttendanceStatusCard({
           {punchOutTime ? (
             <Text style={styles.timeValue}>{punchOutTime}</Text>
           ) : isCheckedIn ? (
-            <Pressable onPress={onCheckOut} style={[styles.inlineButton, styles.checkOutButton]}>
-              <Icon name="schedule" size={20} color={colors.background} />
-              <Text style={styles.buttonLabel}>Check Out</Text>
+            <Pressable
+              onPress={onCheckOut}
+              style={[styles.inlineButton, styles.checkOutButton, checkOutLoading && styles.buttonDisabled]}
+              disabled={checkOutLoading}
+            >
+              {checkOutLoading ? (
+                <ActivityIndicator color={colors.background} size="small" />
+              ) : (
+                <>
+                  <Icon name="schedule" size={20} color={colors.background} />
+                  <Text style={styles.buttonLabel}>Check Out</Text>
+                </>
+              )}
             </Pressable>
           ) : null}
         </View>

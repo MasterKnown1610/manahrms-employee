@@ -1,13 +1,22 @@
 import React from 'react';
-import { Pressable, Text, StyleSheet } from 'react-native';
+import { ActivityIndicator, Pressable, Text, StyleSheet } from 'react-native';
 import Icon from '../Icon/Icon';
 import { colors, spacing, borderRadius } from '../../theme/theme';
 
-function ApplyForLeaveButton({ onPress }) {
+function ApplyForLeaveButton({ onPress, loading = false, disabled = false }) {
+  const isDisabled = disabled || loading;
   return (
-    <Pressable onPress={onPress} style={styles.button}>
-      <Icon name="add" size={22} color={colors.background} />
-      <Text style={styles.label}>Apply for Leave</Text>
+    <Pressable
+      onPress={onPress}
+      disabled={isDisabled}
+      style={[styles.button, isDisabled && styles.buttonDisabled]}
+    >
+      {loading ? (
+        <ActivityIndicator size="small" color={colors.background} />
+      ) : (
+        <Icon name="add" size={22} color={colors.background} />
+      )}
+      <Text style={styles.label}>{loading ? 'Applying...' : 'Apply for Leave'}</Text>
     </Pressable>
   );
 }
@@ -22,6 +31,9 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     gap: spacing.sm,
     marginBottom: spacing.lg,
+  },
+  buttonDisabled: {
+    opacity: 0.8,
   },
   label: {
     fontSize: 16,

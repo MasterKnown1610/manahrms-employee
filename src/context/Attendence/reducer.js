@@ -34,6 +34,18 @@ const attendenceHandlers = {
     loading: false,
     error: null,
   }),
+  SET_PRESENT_ATTENDANCE: (state, action) => ({
+    ...state,
+    presentAttendance: action.payload,
+    loading: false,
+    error: null,
+  }),
+  SET_ATTENDANCE_STATS: (state, action) => ({
+    ...state,
+    attendanceStats: action.payload,
+    loading: false,
+    error: null,
+  }),
 }
 
 const  Reducer = (state, action) => {

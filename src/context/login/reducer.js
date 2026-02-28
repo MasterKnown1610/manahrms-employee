@@ -9,6 +9,10 @@ const loginHandlers = {
     ...state,
     loading: true,
   }),
+  SET_PROFILE: (state, action) => ({
+    ...state,
+    profile: action.payload,
+  }),
 }
 
 const  Reducer = (state, action) => {

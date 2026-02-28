@@ -7,14 +7,12 @@ import {
   Animated,
 } from 'react-native';
 import { Icon } from '../../components';
-import { useAuth } from '../../context/AuthContext';
 import { spacing } from '../../theme/theme';
 
 const SPLASH_DURATION_MS = 3000;
 const LOGO_SIZE = 120;
 
 function SplashScreen() {
-  const { setLoading } = useAuth();
   const [progress, setProgress] = useState(0);
   const spinValue = useRef(new Animated.Value(0)).current;
 
@@ -46,16 +44,8 @@ function SplashScreen() {
         return prev + 1;
       });
     }, intervalMs);
-
-    const doneTimer = setTimeout(() => {
-      setLoading(false);
-    }, SPLASH_DURATION_MS);
-
-    return () => {
-      clearInterval(interval);
-      clearTimeout(doneTimer);
-    };
-  }, [setLoading]);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <View style={styles.container}>

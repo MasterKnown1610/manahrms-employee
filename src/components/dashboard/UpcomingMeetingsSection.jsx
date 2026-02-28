@@ -1,34 +1,41 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { colors, spacing } from '../../theme/theme';
-import UpcomingMeetingCard from './UpcomingMeetingCard';
+import UpcomingDeadlineCard from './UpcomingDeadlineCard';
 
-const DEFAULT_MEETING = {
-  id: '1',
-  title: 'Product Strategy Sync',
-  location: 'Room 402 • Zoom',
-  time: '10:00 AM - 11:30 AM',
-  timeLabel: 'In 45 mins',
-  attendeesCount: 4,
-};
+const DEFAULT_DEADLINES = [
+  {
+    id: '1',
+    title: 'Q1 Report Submission',
+    dueDate: 'Mar 15, 2025 • 5:00 PM',
+    dueLabel: 'In 2 weeks',
+    projectOrType: 'Finance Report',
+  },
+  {
+    id: '2',
+    title: 'Project Alpha Deliverable',
+    dueDate: 'Mar 8, 2025 • 11:59 PM',
+    dueLabel: 'In 1 week',
+    projectOrType: 'Engineering',
+  },
+];
 
 function UpcomingMeetingsSection({
-  meetings = [DEFAULT_MEETING],
-  onJoinMeeting,
+  deadlines = DEFAULT_DEADLINES,
+  onDeadlinePress,
 }) {
-  const meeting = meetings[0];
-  if (!meeting) return null;
+  const deadline = deadlines[0];
+  if (!deadline) return null;
 
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>Upcoming Meetings</Text>
-      <UpcomingMeetingCard
-        title={meeting.title}
-        location={meeting.location}
-        time={meeting.time}
-        timeLabel={meeting.timeLabel}
-        attendeesCount={meeting.attendeesCount}
-        onJoin={() => onJoinMeeting?.(meeting)}
+      <Text style={styles.sectionTitle}>Upcoming Deadlines</Text>
+      <UpcomingDeadlineCard
+        title={deadline.title}
+        dueDate={deadline.dueDate}
+        dueLabel={deadline.dueLabel}
+        projectOrType={deadline.projectOrType}
+        onView={() => onDeadlinePress?.(deadline)}
       />
     </View>
   );

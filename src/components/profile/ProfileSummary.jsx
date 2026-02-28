@@ -29,8 +29,8 @@ function ProfileSummary({
         </Pressable>
       </View>
       <Text style={styles.name}>{name}</Text>
-      <Text style={styles.designation}>{designation}</Text>
-      <Text style={styles.department}>{department}</Text>
+      {designation ? <Text style={styles.designation}>{designation}</Text> : null}
+      {department ? <Text style={styles.department}>{department}</Text> : null}
     </View>
   );
 }

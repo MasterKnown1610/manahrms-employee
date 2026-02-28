@@ -1,4 +1,4 @@
-import React, { useState, useContext, useCallback } from 'react';
+import React, { useState, useContext, useCallback, useRef } from 'react';
 import { ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
@@ -7,10 +7,16 @@ import {
   AttendanceStatusCard,
   MonthlySummaryCards,
   AttendanceCalendar,
-  RecentLogsSection,
+  AdminAttendanceView,
 } from '../../components/attendance';
 import { colors, spacing } from '../../theme/theme';
 import Context from '../../context/Context';
+
+function getRoleFromContext(loginContext) {
+  const profile = loginContext?.profile?.data ?? loginContext?.profile;
+  const loginData = loginContext?.loginData?.user ?? loginContext?.loginData;
+  return profile?.role ?? loginData?.role ?? 'employee';
+}
 
 function formatTime(date) {
   return date.toLocaleTimeString('en-US', {
@@ -52,31 +58,45 @@ function getTimeFromPayload(payload) {
 }
 
 function AttendanceScreen({ navigation }) {
+  const { attendence: attendenceContext = {}, login: loginContext = {} } = useContext(Context);
   const {
-    attendence: {
-      punchIn,
-      punchOut,
-      lastPunchIn,
-      lastPunchOut,
-      todayAttendance,
-      fetchTodayAttendance,
-      fetchCalendar,
-      calendarAttendance,
-      loading,
-      error,
-    } = {},
-  } = useContext(Context);
+    punchIn,
+    punchOut,
+    lastPunchIn,
+    lastPunchOut,
+    todayAttendance,
+    fetchTodayAttendance,
+    fetchCalendar,
+    fetchPresentAttendance,
+    fetchAttendanceStats,
+    calendarAttendance,
+    presentAttendance,
+    attendanceStats,
+    loading,
+    error,
+  } = attendenceContext;
+  const role = getRoleFromContext(loginContext);
+  const isAdmin = role === 'admin';
   const [selectedDate, setSelectedDate] = useState(new Date());
+
+  const attendenceRef = useRef(attendenceContext);
+  attendenceRef.current = attendenceContext;
+  const isAdminRef = useRef(isAdmin);
+  isAdminRef.current = isAdmin;
 
   useFocusEffect(
     useCallback(() => {
-      if (typeof fetchTodayAttendance === 'function') {
-        fetchTodayAttendance();
-      }
-      // Calendar API is fetched when AttendanceCalendar mounts or month changes (onMonthChange)
-      if (typeof fetchCalendar === 'function') {
+      const { fetchPresentAttendance: fetchPresent, fetchAttendanceStats: fetchStats, fetchTodayAttendance: fetchToday, fetchCalendar: fetchCal } = attendenceRef.current;
+      const admin = isAdminRef.current;
+      if (admin) {
+        const today = new Date();
+        const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+        fetchPresent?.(dateStr);
+        fetchStats?.();
+      } else {
+        fetchToday?.();
         const now = new Date();
-        fetchCalendar(now.getFullYear(), now.getMonth() + 1);
+        fetchCal?.(now.getFullYear(), now.getMonth() + 1);
       }
     }, []),
   );
@@ -154,6 +174,11 @@ function AttendanceScreen({ navigation }) {
         // Error already dispatched in context (e.g. double punch), shown via checkInError
         return;
       }
+      // Refresh calendar after successful punch out
+      if (typeof fetchCalendar === 'function') {
+        const now = new Date();
+        fetchCalendar(now.getFullYear(), now.getMonth() + 1);
+      }
     } catch (err) {
       // Error is stored in attendance context (SET_ERROR)
     }
@@ -163,47 +188,59 @@ function AttendanceScreen({ navigation }) {
     // Navigate to full logs
   };
 
+  const handleAdminRefresh = useCallback(() => {
+    const { fetchPresentAttendance: fp, fetchAttendanceStats: fs } = attendenceRef.current;
+    const today = new Date();
+    const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    fp?.(dateStr);
+    fs?.();
+  }, []);
+
   return (
     <>
-    <SafeAreaView style={styles.safeArea} edges={["top"]}/>
-       
-          <AttendanceHeader
-            onBackPress={handleBack}
-            onAddPress={handleAdd}
-          />
-        
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-      
-        <AttendanceStatusCard
+      <SafeAreaView style={styles.safeArea} edges={['top']} />
+      <AttendanceHeader onBackPress={handleBack} onAddPress={handleAdd} />
+      {isAdmin ? (
+        <AdminAttendanceView
+          attendanceStats={attendanceStats}
+          presentAttendance={presentAttendance}
+          loading={loading}
+          error={error}
+          onRefresh={handleAdminRefresh}
           dateLabel={formatDateLabel(new Date())}
-          onCheckIn={handleCheckIn}
-          onCheckOut={handleCheckOut}
-          isCheckedIn={isCheckedIn}
-          checkInLoading={loading}
-          checkInError={error}
-          punchInTime={punchInTime}
-          punchOutTime={punchOutTime}
-          alreadyCheckedOut={alreadyCheckedOut}
         />
-        <MonthlySummaryCards
-          workDays={calendarAttendance?.workDays ?? 0}
-          present={calendarAttendance?.present ?? 0}
-          absent={calendarAttendance?.absent ?? 0}
-        />
-        <AttendanceCalendar
-          markedDates={markedDates}
-          absentDates={absentDates}
-          selectedDate={selectedDate}
-          onSelectDate={setSelectedDate}
-          onMonthChange={handleCalendarMonthChange}
-        />
-        <RecentLogsSection onViewAll={handleViewAllLogs} />
-      </ScrollView>
-    
+      ) : (
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <AttendanceStatusCard
+            dateLabel={formatDateLabel(new Date())}
+            onCheckIn={handleCheckIn}
+            onCheckOut={handleCheckOut}
+            isCheckedIn={isCheckedIn}
+            checkInLoading={loading}
+            checkOutLoading={loading}
+            checkInError={error}
+            punchInTime={punchInTime}
+            punchOutTime={punchOutTime}
+            alreadyCheckedOut={alreadyCheckedOut}
+          />
+          <MonthlySummaryCards
+            workDays={calendarAttendance?.workDays ?? 0}
+            present={calendarAttendance?.present ?? 0}
+            absent={calendarAttendance?.absent ?? 0}
+          />
+          <AttendanceCalendar
+            markedDates={markedDates}
+            absentDates={absentDates}
+            selectedDate={selectedDate}
+            onSelectDate={setSelectedDate}
+            onMonthChange={handleCalendarMonthChange}
+          />
+        </ScrollView>
+      )}
     </>
   );
 }

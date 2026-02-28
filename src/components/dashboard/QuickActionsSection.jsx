@@ -1,15 +1,17 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image } from 'react-native';
 import Icon from '../Icon/Icon';
 import { colors, spacing } from '../../theme/theme';
 import QuickActionButton from './QuickActionButton';
 
+const AI_CHAT_ICON_SIZE = 40;
+
 const DEFAULT_ACTIONS = [
   {
     id: 'checkin',
-    icon: <Icon name="fingerprint" size={26} color={colors.background} />,
+    icon: <Icon name="fingerprint" size={28} color={colors.primary} />,
     label: 'Check In/Out',
-    primary: true,
+    primary: false,
   },
   {
     id: 'leave',
@@ -18,15 +20,21 @@ const DEFAULT_ACTIONS = [
     primary: false,
   },
   {
-    id: 'payslip',
-    icon: <Icon name="receipt-long" size={26} color={colors.primary} />,
-    label: 'My Payslip',
+    id: 'projects',
+    icon: <Icon name="folder" size={26} color={colors.primary} />,
+    label: 'Projects',
     primary: false,
   },
   {
-    id: 'directory',
-    icon: <Icon name="people" size={26} color={colors.primary} />,
-    label: 'Directory',
+    id: 'aichat',
+    icon: (
+      <Image
+        source={require('../../assets/theme.png')}
+        style={{ width: AI_CHAT_ICON_SIZE, height: AI_CHAT_ICON_SIZE }}
+        resizeMode="contain"
+      />
+    ),
+    label: 'AI Chat',
     primary: false,
   },
 ];
@@ -68,8 +76,8 @@ const styles = StyleSheet.create({
   },
   actionsRow: {
     flexDirection: 'row',
-    paddingLeft: spacing.lg,
-    paddingRight: spacing.lg,
+    paddingHorizontal: spacing.lg,
+    gap: spacing.lg,
   },
 });
 

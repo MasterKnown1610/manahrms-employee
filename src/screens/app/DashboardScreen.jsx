@@ -7,27 +7,54 @@ import {
   QuickActionsSection,
   TodaysTasksSection,
   UpcomingMeetingsSection,
+  RecentActivitiesSection,
   BottomTabBar,
 } from '../../components/dashboard';
 import { colors, spacing } from '../../theme/theme';
 import Context from '../../context/Context';
 
+function getRoleFromContext(loginContext) {
+  const profile = loginContext?.profile?.data ?? loginContext?.profile;
+  const loginData = loginContext?.loginData?.user ?? loginContext?.loginData;
+  return profile?.role ?? loginData?.role ?? 'employee';
+}
+
+function getTimeBasedGreeting() {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 12) return "Good morning, let's get things done.";
+  if (hour >= 12 && hour < 17) return "Good afternoon, let's get things done.";
+  if (hour >= 17 && hour < 21) return "Good evening, let's get things done.";
+  return "Good night, let's get things done.";
+}
+
 function DashboardScreen({ navigation }) {
   const [activeTab, setActiveTab] = useState('dashboard');
-  const { dashboard: dashboardContext } = useContext(Context);
-  const { dashboard, getDashboard } = dashboardContext ?? {};
+  const { dashboard: dashboardContext, login: loginContext } = useContext(Context);
+  const { dashboard, dashboardAdminOverview, getDashboard, getdashboardadminoverview } = dashboardContext ?? {};
+  const { getProfile, profile } = loginContext ?? {};
+  const role = getRoleFromContext(loginContext ?? {});
 
   useEffect(() => {
-    getDashboard?.();
-  }, []);
+    if (!profile && getProfile) getProfile();
+  }, [profile, getProfile]);
+
+  useEffect(() => {
+    if (role === 'admin') {
+      getdashboardadminoverview?.();
+    } else {
+      getDashboard?.();
+    }
+  }, [role, getDashboard, getdashboardadminoverview]);
+
+  const dashboardData = role === 'admin' ? dashboardAdminOverview : dashboard;
 
   const handleMenuPress = () => {
     navigation.openDrawer?.();
   };
 
-  const handleNotificationPress = () => {
-    // Navigate to notifications
-  };
+  const profileData = profile?.data ?? profile;
+  const loginData = loginContext?.loginData?.user ?? loginContext?.loginData;
+  const userName = profileData?.full_name ?? profileData?.name ?? loginData?.full_name ?? loginData?.username ?? loginData?.name ?? 'User';
 
   const handleTabPress = (tabKey) => {
     setActiveTab(tabKey);
@@ -49,15 +76,20 @@ function DashboardScreen({ navigation }) {
     // Toggle task completion
   };
 
-  const handleJoinMeeting = (meeting) => {
-    // Join meeting (e.g. open Zoom link)
+  const handleDeadlinePress = (deadline) => {
+    // Navigate to task or deadline detail
+    navigation.navigate('Tasks');
   };
 
   const handleQuickActionPress = (actionId) => {
     if (actionId === 'checkin') {
       navigation.navigate('Attendance');
+    } else if (actionId === 'projects') {
+      navigation.navigate('Main', { screen: 'Dashboard' }); // TODO: add Projects screen when available
+    } else if (actionId === 'aichat') {
+      navigation.navigate('AIChat');
     }
-    // Add other action handlers as needed (leave, payslip, directory)
+    // Add other action handlers as needed (leave, payslip)
   };
 
   return (
@@ -65,11 +97,9 @@ function DashboardScreen({ navigation }) {
     <SafeAreaView style={styles.safeArea} edges={["top"]}/>
       
         <DashboardHeader
-          userName="Alex"
-          greeting="Good morning, let's get things done."
+          userName={userName}
+          greeting={getTimeBasedGreeting()}
           onMenuPress={handleMenuPress}
-          onNotificationPress={handleNotificationPress}
-          showNotificationBadge
         />
       
       <ScrollView
@@ -78,18 +108,27 @@ function DashboardScreen({ navigation }) {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <SummaryCardsRow dashboard={dashboard} />
+        <SummaryCardsRow dashboard={dashboardData} />
 
         <QuickActionsSection onActionPress={handleQuickActionPress} />
 
         <View style={styles.content}>
           <TodaysTasksSection
+            tasks={dashboardData?.recent_tasks ?? []}
             onViewAll={handleViewAllTasks}
             onTaskPress={handleTaskPress}
             onTaskCheck={handleTaskCheck}
+            sectionTitle={role === 'admin' ? 'Recent Tasks' : "Today's Tasks"}
           />
 
-          <UpcomingMeetingsSection onJoinMeeting={handleJoinMeeting} />
+          {role === 'admin' ? (
+            <RecentActivitiesSection activities={dashboardData?.recent_activities ?? []} />
+          ) : (
+            <UpcomingMeetingsSection
+              deadlines={dashboardData?.upcoming_deadlines}
+              onDeadlinePress={handleDeadlinePress}
+            />
+          )}
         </View>
       </ScrollView>
 

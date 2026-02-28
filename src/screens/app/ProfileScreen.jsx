@@ -1,20 +1,57 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { View, ScrollView, StyleSheet } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   ProfileHeader,
   ProfileSummary,
-  ProfilePersonalInfo,
-  ProfileOrganizationDetails,
+  ProfileInfoCard,
   ProfileSettingsSecurity,
   ProfileLogoutButton,
   ProfileFooter,
 } from '../../components/profile';
 import { useAuth } from '../../context/AuthContext';
+import Context from '../../context/Context';
 import { colors, spacing } from '../../theme/theme';
+
+function formatDate(isoString) {
+  if (!isoString) return '—';
+  try {
+    const d = new Date(isoString);
+    return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+  } catch {
+    return isoString;
+  }
+}
+
+function getProfileDisplayData(profile) {
+  if (!profile) return {};
+  const p = profile?.data ?? profile;
+  return {
+    id: p?.id ?? '—',
+    company_id: p?.company_id ?? '—',
+    email: p?.email ?? '—',
+    // username: p?.username ?? '—',
+    full_name: p?.full_name ?? '—',
+    // role: p?.role ?? '—',
+    is_active: p?.is_active === true ? 'Active' : 'Inactive',
+    is_superuser: p?.is_superuser === true ? 'Yes' : 'No',
+    force_password_change: p?.force_password_change === true ? 'Yes' : 'No',
+    created_at: formatDate(p?.created_at),
+  };
+}
 
 function ProfileScreen({ navigation }) {
   const { logout } = useAuth();
+  const { login: loginContext } = useContext(Context);
+  const { profile, getProfile } = loginContext ?? {};
+  const displayData = getProfileDisplayData(profile);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      getProfile?.();
+    }, [])
+  );
 
   const handleBack = () => {
     navigation.goBack();
@@ -54,11 +91,27 @@ function ProfileScreen({ navigation }) {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <ProfileSummary onEditPhotoPress={handleEditPhotoPress} />
+        <ProfileSummary
+          name={displayData.full_name}
+          designation=""
+          department=""
+          onEditPhotoPress={handleEditPhotoPress}
+        />
 
         <View style={styles.cards}>
-          <ProfilePersonalInfo />
-          <ProfileOrganizationDetails />
+          <ProfileInfoCard
+            sectionTitle="PROFILE DETAILS"
+            rows={[
+              { iconName: 'badge', label: 'ID', value: String(displayData.id) },
+              { iconName: 'business', label: 'Company ID', value: String(displayData.company_id) },
+              { iconName: 'email', label: 'Email', value: displayData.email },
+              { iconName: 'badge', label: 'Full Name', value: displayData.full_name },
+              { iconName: 'check-circle', label: 'Status', value: displayData.is_active },
+              { iconName: 'star', label: 'Superuser', value: displayData.is_superuser },
+              { iconName: 'lock', label: 'Force Password Change', value: displayData.force_password_change },
+              { iconName: 'event', label: 'Created At', value: displayData.created_at },
+            ]}
+          />
           <ProfileSettingsSecurity
             onChangePasswordPress={handleChangePassword}
             onNotificationSettingsPress={handleNotificationSettings}

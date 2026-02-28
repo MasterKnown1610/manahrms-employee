@@ -33,9 +33,11 @@ function LoginScreen({ navigation }) {
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [message, setMessage] = useState({ text: '', type: null }); // type: 'success' | 'error'
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async () => {
     setMessage({ text: '', type: null });
+    setIsLoading(true);
     try {
       const response = await login(email, password);
       console.log('response', response);
@@ -49,6 +51,8 @@ function LoginScreen({ navigation }) {
       }
     } catch (err) {
       setMessage({ text: err?.message || 'Login failed', type: 'error' });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -134,24 +138,25 @@ function LoginScreen({ navigation }) {
         <Button
           title="Login"
           onPress={handleLogin}
+          loading={isLoading}
           rightIcon={<Icon name="arrow-forward" size={22} color={colors.background} />}
           style={styles.loginButton}
         />
 
         {/* OR Divider */}
-        <View style={styles.orRow}>
+        {/* <View style={styles.orRow}>
           <View style={styles.orLine} />
           <Text style={styles.orText}>OR</Text>
           <View style={styles.orLine} />
-        </View>
+        </View> */}
 
         {/* Login with OTP */}
-        <Button
+        {/* <Button
           title="Login with OTP"
           variant="secondary"
           onPress={handleLoginWithOTP}
           leftIcon={<Icon name="vpn-key" />}
-        />
+        /> */}
 
         {/* Footer */}
         <Text style={styles.poweredBy}>Powered by ManaHRMS</Text>

@@ -4,12 +4,10 @@ import Icon from '../Icon/Icon';
 import { colors, spacing, typography } from '../../theme/theme';
 
 function DashboardHeader({
-  userName = 'Alex',
+  userName = 'User',
   greeting = "Good morning, let's get things done.",
   profileImageUri,
   onMenuPress,
-  onNotificationPress,
-  showNotificationBadge = true,
 }) {
   return (
     <View style={styles.container}>
@@ -33,12 +31,7 @@ function DashboardHeader({
         </View>
       </View>
 
-      <Pressable onPress={onNotificationPress} style={styles.iconButton} hitSlop={8}>
-        <View>
-          <Icon name="notifications" size={24} color={colors.background} />
-          {showNotificationBadge ? <View style={styles.badge} /> : null}
-        </View>
-      </Pressable>
+      <View style={styles.iconButton} />
     </View>
   );
 }
@@ -105,17 +98,6 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.92)',
     marginTop: 4,
     lineHeight: 18,
-  },
-  badge: {
-    position: 'absolute',
-    top: -2,
-    right: -2,
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: colors.error,
-    borderWidth: 2,
-    borderColor: colors.primary,
   },
 });
 
