@@ -2,7 +2,8 @@ import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Icon from '../Icon/Icon';
 import Loader from '../Loader/Loader';
-import { colors, spacing, borderRadius } from '../../theme/theme';
+import { spacing, borderRadius } from '../../theme/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 function AttendanceStatusCard({
   dateLabel = 'Today, Oct 24, 2024',
@@ -16,31 +17,32 @@ function AttendanceStatusCard({
   punchOutTime = null,
   alreadyCheckedOut = false,
 }) {
+  const { colors } = useTheme();
   const statusLabel = alreadyCheckedOut ? 'Present' : isCheckedIn ? 'On duty' : null;
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, { backgroundColor: colors.cardBackground }]}>
       <View style={styles.topRow}>
-        <Text style={styles.dateText}>{dateLabel}</Text>
+        <Text style={[styles.dateText, { color: colors.textSecondary }]}>{dateLabel}</Text>
         {statusLabel ? (
-          <View style={[styles.badge, alreadyCheckedOut && styles.badgePresent]}>
-            <Text style={[styles.badgeText, alreadyCheckedOut && styles.badgeTextPresent]}>{statusLabel}</Text>
+          <View style={[styles.badge, { backgroundColor: colors.primaryLight }, alreadyCheckedOut && { backgroundColor: colors.success }]}>
+            <Text style={[styles.badgeText, { color: colors.primary }, alreadyCheckedOut && { color: colors.background }]}>{statusLabel}</Text>
           </View>
         ) : null}
       </View>
 
-      <View style={styles.timesSection}>
+      <View style={[styles.timesSection, { backgroundColor: colors.backgroundInput }]}>
         <View style={styles.timeBlock}>
           <View style={styles.timeRow}>
             <Icon name="login" size={18} color={colors.primary} />
-            <Text style={styles.timeLabel}>Punch In</Text>
+            <Text style={[styles.timeLabel, { color: colors.textSecondary }]}>Punch In</Text>
           </View>
           {punchInTime ? (
-            <Text style={styles.timeValue}>{punchInTime}</Text>
+            <Text style={[styles.timeValue, { color: colors.text }]}>{punchInTime}</Text>
           ) : !alreadyCheckedOut ? (
             <Pressable
               onPress={onCheckIn}
-              style={[styles.inlineButton, styles.checkInButton, checkInLoading && styles.buttonDisabled]}
+              style={[styles.inlineButton, styles.checkInButton, { backgroundColor: colors.primary }, checkInLoading && styles.buttonDisabled]}
               disabled={checkInLoading}
             >
               {checkInLoading ? (
@@ -48,7 +50,7 @@ function AttendanceStatusCard({
               ) : (
                 <>
                   <Icon name="schedule" size={20} color={colors.background} />
-                  <Text style={styles.buttonLabel}>Check In</Text>
+                  <Text style={[styles.buttonLabel, { color: colors.background }]}>Check In</Text>
                 </>
               )}
             </Pressable>
@@ -57,14 +59,14 @@ function AttendanceStatusCard({
         <View style={styles.timeBlock}>
           <View style={styles.timeRow}>
             <Icon name="logout" size={18} color={colors.primary} />
-            <Text style={styles.timeLabel}>Punch Out</Text>
+            <Text style={[styles.timeLabel, { color: colors.textSecondary }]}>Punch Out</Text>
           </View>
           {punchOutTime ? (
-            <Text style={styles.timeValue}>{punchOutTime}</Text>
+            <Text style={[styles.timeValue, { color: colors.text }]}>{punchOutTime}</Text>
           ) : isCheckedIn ? (
             <Pressable
               onPress={onCheckOut}
-              style={[styles.inlineButton, styles.checkOutButton, checkOutLoading && styles.buttonDisabled]}
+              style={[styles.inlineButton, styles.checkOutButton, { backgroundColor: colors.error }, checkOutLoading && styles.buttonDisabled]}
               disabled={checkOutLoading}
             >
               {checkOutLoading ? (
@@ -72,7 +74,7 @@ function AttendanceStatusCard({
               ) : (
                 <>
                   <Icon name="schedule" size={20} color={colors.background} />
-                  <Text style={styles.buttonLabel}>Check Out</Text>
+                  <Text style={[styles.buttonLabel, { color: colors.background }]}>Check Out</Text>
                 </>
               )}
             </Pressable>
@@ -81,11 +83,11 @@ function AttendanceStatusCard({
       </View>
 
       {checkInError ? (
-        <Text style={styles.errorText}>{checkInError}</Text>
+        <Text style={[styles.errorText, { color: colors.error }]}>{checkInError}</Text>
       ) : null}
 
       {alreadyCheckedOut && (
-        <Text style={styles.presentNote}>You have checked out for today.</Text>
+        <Text style={[styles.presentNote, { color: colors.textSecondary }]}>You have checked out for today.</Text>
       )}
     </View>
   );
@@ -93,7 +95,6 @@ function AttendanceStatusCard({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.background,
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
     marginBottom: spacing.lg,
@@ -111,26 +112,17 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: 14,
-    color: colors.textSecondary,
     fontWeight: '500',
   },
   badge: {
-    backgroundColor: colors.primaryLight,
     paddingHorizontal: spacing.sm + 4,
     paddingVertical: spacing.xs + 2,
     borderRadius: borderRadius.full,
   },
-  badgePresent: {
-    backgroundColor: colors.success,
-  },
   badgeText: {
     fontSize: 12,
     fontWeight: '700',
-    color: colors.primary,
     letterSpacing: 0.3,
-  },
-  badgeTextPresent: {
-    color: colors.background,
   },
   timesSection: {
     flexDirection: 'row',
@@ -138,7 +130,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.sm,
-    backgroundColor: colors.backgroundInput,
     borderRadius: borderRadius.md,
   },
   timeBlock: {
@@ -152,13 +143,11 @@ const styles = StyleSheet.create({
   },
   timeLabel: {
     fontSize: 13,
-    color: colors.textSecondary,
     fontWeight: '500',
   },
   timeValue: {
     fontSize: 15,
     fontWeight: '700',
-    color: colors.text,
   },
   inlineButton: {
     flexDirection: 'row',
@@ -171,14 +160,12 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 12,
-    color: colors.error,
     marginBottom: spacing.sm,
   },
   checkInButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.primary,
     borderRadius: borderRadius.sm,
     paddingVertical: spacing.md,
     gap: spacing.sm,
@@ -191,7 +178,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.error,
     borderRadius: borderRadius.sm,
     paddingVertical: spacing.md,
     gap: spacing.sm,
@@ -200,12 +186,10 @@ const styles = StyleSheet.create({
   buttonLabel: {
     fontSize: 15,
     fontWeight: '700',
-    color: colors.background,
     letterSpacing: 0.3,
   },
   presentNote: {
     fontSize: 13,
-    color: colors.textSecondary,
     marginTop: spacing.xs,
   },
 });

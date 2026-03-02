@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Icon from '../Icon/Icon';
-import { colors, spacing, borderRadius } from '../../theme/theme';
+import { spacing, borderRadius } from '../../theme/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 const PRIORITY_CONFIG = {
   high: { label: 'HIGH PRIORITY', color: '#D32F2F' },      // red – high priority
@@ -36,19 +37,24 @@ function TaskItem({
   onCheckPress,
   showCheckbox = true,
 }) {
+  const { colors } = useTheme();
   const priorityConfig = PRIORITY_CONFIG[priority] || PRIORITY_CONFIG.medium;
   const isClosed = completed || status === 'closed' || priority === 'completed';
   const statusBadge = getStatusBadge(status, isClosed);
 
   return (
-    <Pressable onPress={onPress} style={styles.card}>
+    <Pressable onPress={onPress} style={[styles.card, { backgroundColor: colors.cardBackground }]}>
       {showCheckbox && (
         <Pressable
           onPress={(e) => {
             e?.stopPropagation?.();
             onCheckPress?.();
           }}
-          style={[styles.checkbox, isClosed && styles.checkboxChecked]}
+          style={[
+            styles.checkbox,
+            { borderColor: colors.border },
+            isClosed && { backgroundColor: colors.primary, borderColor: colors.primary },
+          ]}
           hitSlop={8}
         >
           {isClosed ? (
@@ -57,7 +63,7 @@ function TaskItem({
         </Pressable>
       )}
       <View style={styles.content}>
-        <Text style={styles.title} numberOfLines={2}>
+        <Text style={[styles.title, { color: colors.text }]} numberOfLines={2}>
           {title}
         </Text>
         <View style={styles.tag}>
@@ -82,24 +88,19 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.background,
     borderRadius: borderRadius.md,
     padding: spacing.md,
     marginBottom: spacing.sm,
+    minHeight: 80,
   },
   checkbox: {
     width: 24,
     height: 24,
     borderRadius: 4,
     borderWidth: 2,
-    borderColor: colors.border,
     marginRight: spacing.md,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  checkboxChecked: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
   },
   content: {
     flex: 1,
@@ -107,7 +108,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 15,
     fontWeight: '500',
-    color: colors.text,
   },
   tag: {
     alignSelf: 'flex-start',

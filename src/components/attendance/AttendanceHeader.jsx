@@ -1,20 +1,22 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, Image } from 'react-native';
 import Icon from '../Icon/Icon';
-import { colors, spacing } from '../../theme/theme';
+import { spacing } from '../../theme/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 function AttendanceHeader({
   onBackPress,
   onAddPress,
   profileImageUri,
 }) {
+  const { colors } = useTheme();
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.primary }]}>
       <Pressable onPress={onBackPress} style={styles.iconButton} hitSlop={8}>
         <Icon name="arrow-back" size={24} color={colors.background} />
       </Pressable>
 
-      <Text style={styles.title}>Attendance</Text>
+      <Text style={[styles.title, { color: colors.background }]}>Attendance</Text>
 
       <View style={styles.rightRow}>
         {/* <Pressable onPress={onAddPress} style={styles.addButton} hitSlop={8}>
@@ -39,7 +41,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.md,
-    backgroundColor: colors.primary,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
     marginBottom: 20,
@@ -53,7 +54,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '700',
-    color: colors.background,
   },
   rightRow: {
     flexDirection: 'row',

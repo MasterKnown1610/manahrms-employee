@@ -1,12 +1,8 @@
 import React from 'react';
 import { Pressable, Text, View, StyleSheet } from 'react-native';
 import Loader from '../Loader/Loader';
-import {
-  colors,
-  spacing,
-  typography,
-  borderRadius,
-} from '../../theme/theme';
+import { spacing, typography, borderRadius } from '../../theme/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 function Button({
   title,
@@ -20,6 +16,7 @@ function Button({
   textStyle,
   ...rest
 }) {
+  const { colors } = useTheme();
   const isPrimary = variant === 'primary';
 
   return (
@@ -28,7 +25,8 @@ function Button({
       disabled={disabled || loading}
       style={({ pressed }) => [
         styles.base,
-        isPrimary ? styles.primary : styles.secondary,
+        isPrimary && { backgroundColor: colors.primary },
+        !isPrimary && { backgroundColor: 'transparent', borderWidth: 2, borderColor: colors.primary },
         (disabled || loading) && styles.disabled,
         pressed && !disabled && !loading && styles.pressed,
         style,
@@ -43,8 +41,9 @@ function Button({
           <Text
             style={[
               styles.text,
-              isPrimary ? styles.primaryText : styles.secondaryText,
-              (disabled || loading) && styles.disabledText,
+              isPrimary && { color: colors.background },
+              !isPrimary && { color: colors.primary },
+              (disabled || loading) && { color: colors.textSecondary },
               leftIcon && styles.textWithLeftIcon,
               rightIcon && styles.textWithRightIcon,
               textStyle,
@@ -78,14 +77,6 @@ const styles = StyleSheet.create({
   rightIcon: {
     marginLeft: spacing.sm,
   },
-  primary: {
-    backgroundColor: colors.primary,
-  },
-  secondary: {
-    backgroundColor: 'transparent',
-    borderWidth: 2,
-    borderColor: colors.primary,
-  },
   disabled: {
     opacity: 0.6,
   },
@@ -97,15 +88,6 @@ const styles = StyleSheet.create({
   },
   textWithLeftIcon: {},
   textWithRightIcon: {},
-  primaryText: {
-    color: colors.background,
-  },
-  secondaryText: {
-    color: colors.primary,
-  },
-  disabledText: {
-    color: colors.textSecondary,
-  },
 });
 
 export default Button;

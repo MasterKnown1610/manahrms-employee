@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
-import { colors, spacing } from '../../theme/theme';
+import { spacing } from '../../theme/theme';
+import { useTheme } from '../../context/ThemeContext';
 import Loader from '../Loader/Loader';
 import TaskItem from './TaskItem';
 
@@ -12,6 +13,7 @@ function TodaysTasksSection({
   onTaskCheck,
   sectionTitle = "Today's Tasks",
 }) {
+  const { colors } = useTheme();
   const mappedTasks = tasks.map((task) => ({
     ...task,
     completed: task.status === 'closed',
@@ -20,10 +22,10 @@ function TodaysTasksSection({
   return (
     <View style={styles.section}>
       <View style={styles.header}>
-        <Text style={styles.sectionTitle}>{sectionTitle}</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>{sectionTitle}</Text>
         {!loading && (
           <Pressable onPress={onViewAll} hitSlop={8}>
-            <Text style={styles.viewAll}>View All</Text>
+            <Text style={[styles.viewAll, { color: colors.primary }]}>View All</Text>
           </Pressable>
         )}
       </View>
@@ -62,7 +64,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: colors.text,
   },
   loaderWrap: {
     minHeight: 80,
@@ -73,7 +74,6 @@ const styles = StyleSheet.create({
   viewAll: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.primary,
   },
 });
 

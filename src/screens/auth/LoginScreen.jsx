@@ -17,14 +17,16 @@ import {
   Button,
   Icon,
 } from '../../components';
-import { colors, spacing } from '../../theme/theme';
+import { spacing } from '../../theme/theme';
 import { useAuth } from '../../context/AuthContext';
 import Context from '../../context/Context';
+import { useTheme } from '../../context/ThemeContext';
 
 const CARD_RADIUS = 24;
 const LOGO_CIRCLE_SIZE = 64;
 
 function LoginScreen({ navigation }) {
+  const { colors } = useTheme();
   const {
     login: { login },
   } = useContext(Context);
@@ -72,28 +74,28 @@ function LoginScreen({ navigation }) {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom', 'left', 'right']}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top', 'bottom', 'left', 'right']}>
       <KeyboardAvoidingView
         style={styles.keyboardAvoid}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
         <ScrollView
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[styles.scrollContent, { backgroundColor: colors.background }]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.card}>
+          <View style={[styles.card, { backgroundColor: colors.background }]}>
         {/* Header */}
-        <View style={styles.logoCircle}>
+        <View style={[styles.logoCircle, { backgroundColor: colors.primaryLight }]}>
           <Image
             source={require('../../assets/logo.png')}
             style={styles.logoImage}
             resizeMode="contain"
           />
         </View>
-        <Text style={styles.appName}>ManaHRMS</Text>
-        <Text style={styles.tagline}>Employee Portal Login</Text>
+        <Text style={[styles.appName, { color: colors.text }]}>ManaHRMS</Text>
+        <Text style={[styles.tagline, { color: colors.textSecondary }]}>Employee Portal Login</Text>
 
         {/* Status message - notification style */}
         {message.text ? (
@@ -134,12 +136,12 @@ function LoginScreen({ navigation }) {
             onPress={() => setRememberMe((prev) => !prev)}
             hitSlop={8}
           >
-            <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
+            <View style={[styles.checkbox, { borderColor: colors.border }, rememberMe && { backgroundColor: colors.primary, borderColor: colors.primary }]}>
               {rememberMe ? (
                 <Icon name="check" size={16} color={colors.background} />
               ) : null}
             </View>
-            <Text style={styles.rememberText}>Remember Me</Text>
+            <Text style={[styles.rememberText, { color: colors.text }]}>Remember Me</Text>
           </Pressable>
           {/* <Pressable onPress={handleForgotPassword} hitSlop={8}>
             <Text style={styles.forgotText}>Forgot Password?</Text>
@@ -171,8 +173,8 @@ function LoginScreen({ navigation }) {
         /> */}
 
         {/* Footer */}
-        <Text style={styles.poweredBy}>Powered by ManaHRMS</Text>
-        <Text style={styles.version}>V1.0.0 • ENTERPRISE CLOUD</Text>
+        <Text style={[styles.poweredBy, { color: colors.textSecondary }]}>Powered by ManaHRMS</Text>
+        <Text style={[styles.version, { color: colors.placeholder }]}>V1.0.0 • ENTERPRISE CLOUD</Text>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -183,14 +185,12 @@ function LoginScreen({ navigation }) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#E8E6EB',
   },
   keyboardAvoid: {
     flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
-    backgroundColor: '#E8E6EB',
     padding: spacing.lg,
     paddingVertical: spacing.xl,
     alignItems: 'center',
@@ -200,7 +200,6 @@ const styles = StyleSheet.create({
   card: {
     width: '100%',
     maxWidth: 400,
-    backgroundColor: colors.background,
     borderRadius: CARD_RADIUS,
     padding: spacing.lg,
     ...Platform.select({
@@ -219,7 +218,6 @@ const styles = StyleSheet.create({
     width: LOGO_CIRCLE_SIZE,
     height: LOGO_CIRCLE_SIZE,
     borderRadius: LOGO_CIRCLE_SIZE / 2,
-    backgroundColor: colors.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
     alignSelf: 'center',
@@ -232,13 +230,11 @@ const styles = StyleSheet.create({
   appName: {
     fontSize: 24,
     fontWeight: '700',
-    color: colors.text,
     textAlign: 'center',
     marginBottom: spacing.xs,
   },
   tagline: {
     fontSize: 14,
-    color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: spacing.xl,
   },
@@ -257,22 +253,15 @@ const styles = StyleSheet.create({
     height: 22,
     borderRadius: 4,
     borderWidth: 2,
-    borderColor: colors.border,
     marginRight: spacing.sm,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  checkboxChecked: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
   rememberText: {
     fontSize: 14,
-    color: colors.text,
   },
   forgotText: {
     fontSize: 14,
-    color: colors.primary,
     fontWeight: '600',
   },
   notification: {
@@ -327,23 +316,19 @@ const styles = StyleSheet.create({
   orLine: {
     flex: 1,
     height: 1,
-    backgroundColor: colors.border,
   },
   orText: {
     fontSize: 12,
-    color: colors.textSecondary,
     marginHorizontal: spacing.md,
   },
   poweredBy: {
     fontSize: 13,
-    color: colors.textSecondary,
     textAlign: 'center',
     marginTop: spacing.xl,
     marginBottom: spacing.xs,
   },
   version: {
     fontSize: 11,
-    color: colors.placeholder,
     textAlign: 'center',
   },
 });

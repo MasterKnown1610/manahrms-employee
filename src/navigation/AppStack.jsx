@@ -7,11 +7,12 @@ import TasksScreen from '../screens/app/TasksScreen';
 import LeaveScreen from '../screens/app/LeaveScreen';
 import AIChatScreen from '../screens/app/AIChatScreen';
 import ProjectsScreen from '../screens/app/ProjectsScreen';
-import { colors } from '../theme/theme';
+import { useTheme } from '../context/ThemeContext';
 
 const Stack = createNativeStackNavigator();
 
 function AppStack() {
+  const { colors } = useTheme();
   return (
     <Stack.Navigator
       screenOptions={{
@@ -23,7 +24,7 @@ function AppStack() {
           color: colors.background,
         },
         headerShadowVisible: false,
-        contentStyle: { backgroundColor: colors.cardBackground },
+        contentStyle: { backgroundColor: colors.background },
       }}
     >
       <Stack.Screen

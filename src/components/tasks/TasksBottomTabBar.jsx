@@ -2,7 +2,8 @@ import React from 'react';
 import { View, Text, StyleSheet, Pressable, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from '../Icon/Icon';
-import { colors, spacing } from '../../theme/theme';
+import { spacing } from '../../theme/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 const TABS = [
   { key: 'Dashboard', label: 'Dashboard', icon: 'dashboard' },
@@ -13,11 +14,12 @@ const TABS = [
 ];
 
 function TasksBottomTabBar({ activeTab = 'Tasks', onTabPress }) {
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const bottomPadding = Math.max(insets.bottom, spacing.sm);
 
   return (
-    <View style={[styles.container, { paddingBottom: bottomPadding }]}>
+    <View style={[styles.container, { paddingBottom: bottomPadding, backgroundColor: colors.background, borderTopColor: colors.border }]}>
       <View style={styles.bar}>
         {TABS.map((tab) => {
           const isActive = activeTab === tab.key;
@@ -25,7 +27,7 @@ function TasksBottomTabBar({ activeTab = 'Tasks', onTabPress }) {
             <Pressable
               key={tab.key}
               onPress={() => onTabPress?.(tab.key)}
-              style={[styles.tab, isActive && styles.tabActive]}
+              style={styles.tab}
               hitSlop={8}
             >
               <Icon
@@ -36,7 +38,8 @@ function TasksBottomTabBar({ activeTab = 'Tasks', onTabPress }) {
               <Text
                 style={[
                   styles.tabLabel,
-                  isActive && styles.tabLabelActive,
+                  { color: colors.textSecondary },
+                  isActive && [styles.tabLabelActive, { color: colors.primary }],
                 ]}
               >
                 {tab.label}
@@ -51,10 +54,8 @@ function TasksBottomTabBar({ activeTab = 'Tasks', onTabPress }) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.background,
     paddingTop: spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
     ...Platform.select({
       ios: {
         shadowColor: '#000',
@@ -84,12 +85,10 @@ const styles = StyleSheet.create({
   },
   tabLabel: {
     fontSize: 10,
-    color: colors.textSecondary,
     marginTop: 4,
     fontWeight: '500',
   },
   tabLabelActive: {
-    color: colors.primary,
     fontWeight: '600',
   },
 });

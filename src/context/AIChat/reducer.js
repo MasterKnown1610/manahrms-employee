@@ -26,6 +26,7 @@ const aiChatHandlers = {
     messages: [],
     error: null,
   }),
+  RESET: () => initialState,
 };
 
 const Reducer = (state, action) => {

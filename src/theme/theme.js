@@ -1,8 +1,18 @@
 /**
  * Global theme structure for HRMS Employee app
- * Purple accent, light backgrounds, consistent spacing
+ * Light and dark mode color sets
  */
-export const colors = {
+
+export const spacing = {
+  xs: 4,
+  sm: 8,
+  md: 16,
+  lg: 24,
+  xl: 32,
+  xxl: 48,
+};
+
+export const colorsLight = {
   primary: '#6B4E9E',
   primaryLight: '#E8E0F4',
   background: '#FFFFFF',
@@ -20,21 +30,40 @@ export const colors = {
   cardBackground: '#F5F5F5',
 };
 
+export const colorsDark = {
+  primary: '#B39DDB',
+  primaryLight: '#4A3F6B',
+  background: '#121212',
+  backgroundInput: '#1E1E1E',
+  surface: '#2D2D2D',
+  text: '#FFFFFF',
+  textSecondary: '#B0B0B0',
+  placeholder: '#808080',
+  border: '#404040',
+  borderFocus: '#B39DDB',
+  error: '#EF5350',
+  success: '#66BB6A',
+  priorityHigh: '#E57373',
+  priorityMedium: '#FFB74D',
+  cardBackground: '#2D2D2D',
+};
+
+export const getColors = (mode) => (mode === 'dark' ? colorsDark : colorsLight);
+
+/** @deprecated Use useTheme() or getColors(mode) for light/dark support */
+export const colors = colorsLight;
+
 export const typography = {
   label: {
     fontSize: 12,
     fontWeight: '600',
     letterSpacing: 0.8,
-    color: colors.text,
   },
   input: {
     fontSize: 16,
     fontWeight: '400',
-    color: colors.text,
   },
-  placeholder: {
-    color: colors.placeholder,
-  },
+  placeholder: {},
   button: {
     fontSize: 16,
     fontWeight: '600',
@@ -52,19 +81,10 @@ export const inputHeight = 48;
 export const iconSize = 22;
 
 export default {
-  colors,
+  colors: colorsLight,
   spacing,
   typography,
   borderRadius,
   inputHeight,
   iconSize,
-};
-
-export const spacing = {
-  xs: 4,
-  sm: 8,
-  md: 16,
-  lg: 24,
-  xl: 32,
-  xxl: 48,
 };

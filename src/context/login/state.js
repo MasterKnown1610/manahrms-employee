@@ -1,4 +1,4 @@
-import { useReducer } from 'react';
+import { useReducer, useCallback } from 'react';
 import { API_URLS } from '../../services/config';
 import Reducer from './reducer';
 import { LoginActions } from './action';
@@ -57,11 +57,14 @@ export const LoginState = () => {
   
 
 
+  const reset = useCallback(() => dispatch({ type: LoginActions.RESET }), []);
+
   return {
     ...state,
     login,
     getProfile,
     loginData: state.login,
+    reset,
   };
 };
 

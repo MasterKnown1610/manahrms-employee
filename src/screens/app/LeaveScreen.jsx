@@ -10,8 +10,9 @@ import {
 } from '../../components/leave';
 import { parseDateStr } from '../../components/DatePickerField';
 import { useToast } from '../../components/Toast';
-import { colors, spacing } from '../../theme/theme';
+import { spacing } from '../../theme/theme';
 import Context from '../../context/Context';
+import { useTheme } from '../../context/ThemeContext';
 
 function toApiDate(mmDdYyyy) {
   if (!mmDdYyyy) return '';
@@ -22,6 +23,7 @@ function toApiDate(mmDdYyyy) {
 }
 
 function LeaveScreen({ navigation }) {
+  const { colors } = useTheme();
   const { leave: leaveContext } = useContext(Context);
   const {
     leave: leaveTypesData,
@@ -99,7 +101,7 @@ function LeaveScreen({ navigation }) {
 
   return (
     <>
-      <SafeAreaView style={styles.safeArea} edges={['top']} />
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.primary }]} edges={['top']} />
       <LeaveHeader onBackPress={handleBack} onNotificationPress={handleNotification} />
       <ScrollView
         style={styles.scroll}
@@ -129,9 +131,7 @@ function LeaveScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    backgroundColor: colors.primary,
-  },
+  safeArea: {},
   scroll: {
     flex: 1,
   },

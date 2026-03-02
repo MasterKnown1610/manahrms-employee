@@ -1,13 +1,16 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Icon from '../Icon/Icon';
-import { colors, spacing, borderRadius } from '../../theme/theme';
+import { spacing, borderRadius } from '../../theme/theme';
+import { useTheme } from '../../context/ThemeContext';
 
-const STATUS_CONFIG = {
-  approved: { bg: colors.success, icon: 'check', label: 'APPROVED' },
-  pending: { bg: colors.priorityMedium, icon: 'radio-button-unchecked', label: 'PENDING' },
-  rejected: { bg: colors.priorityHigh, icon: 'close', label: 'REJECTED' },
-};
+function getStatusConfig(colors) {
+  return {
+    approved: { bg: colors.success, icon: 'check', label: 'APPROVED' },
+    pending: { bg: colors.priorityMedium, icon: 'radio-button-unchecked', label: 'PENDING' },
+    rejected: { bg: colors.priorityHigh, icon: 'close', label: 'REJECTED' },
+  };
+}
 
 function normalizeStatus(status) {
   const s = String(status ?? '').toLowerCase();
@@ -54,25 +57,27 @@ function normalizeItem(item, fallbackId) {
   };
 }
 
-function LeaveHistoryItem({ leaveType, dateRange, status }) {
-  const config = STATUS_CONFIG[status] || STATUS_CONFIG.pending;
+function LeaveHistoryItem({ leaveType, dateRange, status, statusConfig, colors }) {
+  const config = statusConfig[status] || statusConfig.pending;
   return (
     <View style={styles.item}>
       <View style={[styles.statusIcon, { backgroundColor: config.bg }]}>
         <Icon name={config.icon} size={16} color={colors.background} />
       </View>
       <View style={styles.itemContent}>
-        <Text style={styles.leaveType}>{leaveType}</Text>
-        <Text style={styles.dateRange}>{dateRange}</Text>
+        <Text style={[styles.leaveType, { color: colors.text }]}>{leaveType}</Text>
+        <Text style={[styles.dateRange, { color: colors.textSecondary }]}>{dateRange}</Text>
       </View>
       <View style={[styles.badge, { backgroundColor: config.bg }]}>
-        <Text style={styles.badgeText}>{config.label}</Text>
+        <Text style={[styles.badgeText, { color: colors.background }]}>{config.label}</Text>
       </View>
     </View>
   );
 }
 
 function LeaveHistorySection({ items = [] }) {
+  const { colors } = useTheme();
+  const statusConfig = getStatusConfig(colors);
   const list = Array.isArray(items)
     ? items
     : (items?.data ?? items?.requests ?? items?.leaveRequests ?? items?.results ?? []);
@@ -81,18 +86,20 @@ function LeaveHistorySection({ items = [] }) {
 
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>LEAVE HISTORY</Text>
+      <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>LEAVE HISTORY</Text>
       {normalized.length === 0 ? (
-        <View style={styles.emptyCard}>
-          <Text style={styles.emptyText}>No leave requests yet.</Text>
+        <View style={[styles.emptyCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No leave requests yet.</Text>
         </View>
       ) : null}
       {normalized.map((item) => (
-        <View key={item.id} style={styles.card}>
+        <View key={item.id} style={[styles.card, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
           <LeaveHistoryItem
             leaveType={item.leaveType}
             dateRange={item.dateRange}
             status={item.status}
+            statusConfig={statusConfig}
+            colors={colors}
           />
         </View>
       ))}
@@ -107,29 +114,23 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 11,
     fontWeight: '700',
-    color: colors.textSecondary,
     letterSpacing: 0.8,
     marginBottom: spacing.sm,
   },
   card: {
-    backgroundColor: colors.background,
     borderRadius: borderRadius.sm,
     marginBottom: spacing.sm,
     borderWidth: 1,
-    borderColor: colors.border,
     overflow: 'hidden',
   },
   emptyCard: {
-    backgroundColor: colors.background,
     borderRadius: borderRadius.sm,
     borderWidth: 1,
-    borderColor: colors.border,
     padding: spacing.md,
     marginBottom: spacing.sm,
   },
   emptyText: {
     fontSize: 13,
-    color: colors.textSecondary,
   },
   item: {
     flexDirection: 'row',
@@ -150,11 +151,9 @@ const styles = StyleSheet.create({
   leaveType: {
     fontSize: 15,
     fontWeight: '600',
-    color: colors.text,
   },
   dateRange: {
     fontSize: 13,
-    color: colors.textSecondary,
     marginTop: 2,
   },
   badge: {
@@ -165,7 +164,6 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 11,
     fontWeight: '700',
-    color: colors.background,
     letterSpacing: 0.3,
   },
 });

@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, Platform, Modal, Pressable } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Icon from '../Icon/Icon';
-import { colors, spacing, borderRadius } from '../../theme/theme';
+import { spacing, borderRadius } from '../../theme/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 export function formatDate(date) {
   if (!date) return '';
@@ -30,6 +31,7 @@ function DatePickerField({
   maximumDate,
   containerStyle,
 }) {
+  const { colors } = useTheme();
   const [visible, setVisible] = useState(false);
   const [tempDate, setTempDate] = useState(() =>
     value ? parseDateStr(value) : minimumDate ?? new Date()
@@ -70,9 +72,9 @@ function DatePickerField({
 
   return (
     <View style={[styles.field, containerStyle]}>
-      {label ? <Text style={styles.label}>{label}</Text> : null}
-      <Pressable onPress={openPicker} style={styles.inputRow}>
-        <Text style={[styles.inputText, !value && styles.placeholder]}>
+      {label ? <Text style={[styles.label, { color: colors.textSecondary }]}>{label}</Text> : null}
+      <Pressable onPress={openPicker} style={[styles.inputRow, { backgroundColor: colors.backgroundInput, borderColor: colors.border }]}>
+        <Text style={[styles.inputText, { color: colors.text }, !value && { color: colors.placeholder }]}>
           {value || placeholder}
         </Text>
         <Icon name="event" size={20} color={colors.textSecondary} />
@@ -82,12 +84,12 @@ function DatePickerField({
         Platform.OS === 'ios' ? (
           <Modal transparent animationType="slide">
             <Pressable style={styles.overlay} onPress={handleCancel}>
-              <Pressable style={styles.container} onPress={(e) => e.stopPropagation()}>
-                <View style={styles.header}>
+              <Pressable style={[styles.container, { backgroundColor: colors.background }]} onPress={(e) => e.stopPropagation()}>
+                <View style={[styles.header, { borderBottomColor: colors.border }]}>
                   <Pressable onPress={handleCancel}>
-                    <Text style={styles.cancelText}>Cancel</Text>
+                    <Text style={[styles.cancelText, { color: colors.textSecondary }]}>Cancel</Text>
                   </Pressable>
-                  <Text style={styles.titleText}>{label || 'Select Date'}</Text>
+                  <Text style={[styles.titleText, { color: colors.text }]}>{label || 'Select Date'}</Text>
                   <Pressable onPress={handleConfirm}>
                     <Text style={[styles.doneText, { color: colors.primary }]}>Done</Text>
                   </Pressable>
@@ -111,7 +113,6 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 11,
     fontWeight: '700',
-    color: colors.textSecondary,
     letterSpacing: 0.5,
     marginBottom: spacing.xs,
   },
@@ -119,20 +120,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: colors.backgroundInput,
     borderRadius: borderRadius.sm,
     borderWidth: 1,
-    borderColor: colors.border,
     paddingHorizontal: spacing.md,
     height: 48,
   },
   inputText: {
     fontSize: 15,
-    color: colors.text,
     flex: 1,
-  },
-  placeholder: {
-    color: colors.placeholder,
   },
   overlay: {
     flex: 1,
@@ -140,7 +135,6 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   container: {
-    backgroundColor: colors.background ?? '#fff',
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     paddingBottom: 34,
@@ -152,16 +146,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border ?? '#eee',
   },
   cancelText: {
     fontSize: 16,
-    color: colors.textSecondary ?? '#666',
   },
   titleText: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.text ?? '#000',
   },
   doneText: {
     fontSize: 16,

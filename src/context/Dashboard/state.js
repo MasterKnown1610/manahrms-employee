@@ -69,10 +69,13 @@ export const DashboardState = () => {
     }
   }, [token]);
 
+  const reset = useCallback(() => dispatch({ type: DashboardActions.RESET }), []);
+
   return {
     ...state,
     getDashboard,
     getdashboardadminoverview,
+    reset,
   };
 };
 

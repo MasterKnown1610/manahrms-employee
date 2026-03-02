@@ -1,4 +1,4 @@
-import { useReducer } from 'react';
+import { useReducer, useCallback } from 'react';
 import { API_URLS } from '../../services/config';
 import Reducer from './reducer';
 import { TaskActions } from './action';
@@ -43,6 +43,51 @@ export const TaskState = () => {
         payload: response.data.data
       });
       return response.data.data;
+    } catch (error) {
+      const message = error?.response?.data?.message ?? error?.message ?? 'Failed to fetch tasks';
+      dispatch({
+        type: TaskActions.SET_ERROR,
+        payload: message,
+      });
+      return { success: false, error: message };
+    }
+  };
+
+  const getTasksByQuery = async (options = {}) => {
+    try {
+      if (!token) {
+        dispatch({
+          type: TaskActions.SET_ERROR,
+          payload: 'Not authenticated',
+        });
+        return { success: false, error: 'Not authenticated' };
+      }
+      dispatch({ type: TaskActions.SET_LOADING });
+
+      const {
+        filter = [],
+        page = 1,
+        page_size = 20,
+        sort = [{ field: 'created_at', order: 'desc' }],
+      } = options;
+
+      const url = `${API_URLS.Task}/query`;
+      const response = await axios.post(
+        url,
+        { filter, page, page_size, sort },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      const data = response?.data?.data ?? response?.data ?? [];
+      dispatch({
+        type: TaskActions.SET_TASKS,
+        payload: Array.isArray(data) ? data : (data?.items ?? data?.tasks ?? []),
+      });
+      return Array.isArray(data) ? data : (data?.items ?? data?.tasks ?? []);
     } catch (error) {
       const message = error?.response?.data?.message ?? error?.message ?? 'Failed to fetch tasks';
       dispatch({
@@ -107,12 +152,16 @@ export const TaskState = () => {
     dispatch({ type: TaskActions.CLEAR_TASK_DETAIL });
   };
 
+  const reset = useCallback(() => dispatch({ type: TaskActions.RESET }), []);
+
   return {
     ...state,
     getTasks,
+    getTasksByQuery,
     getTaskById,
     updateTaskStatus,
     clearTaskDetail,
+    reset,
   };
 };
 

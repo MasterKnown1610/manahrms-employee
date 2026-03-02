@@ -11,6 +11,7 @@ export function AuthProvider({ children }) {
   const [isLoading, setIsLoading] = useState(true);
   const [token, setTokenState] = useState(null);
   const logoutRef = useRef(null);
+  const onLogoutCallbackRef = useRef(null);
 
   const login = (authData) => {
     const authToken =
@@ -23,9 +24,14 @@ export function AuthProvider({ children }) {
   };
 
   const logout = () => {
+    onLogoutCallbackRef.current?.();
     setTokenState(null);
     setIsAuthenticated(false);
     AsyncStorage.removeItem(AUTH_STORAGE_KEY);
+  };
+
+  const registerOnLogout = (callback) => {
+    onLogoutCallbackRef.current = callback;
   };
 
   logoutRef.current = logout;
@@ -83,6 +89,7 @@ export function AuthProvider({ children }) {
     login,
     logout,
     setLoading,
+    registerOnLogout,
   };
 
   return (

@@ -10,8 +10,9 @@ import {
   AdminAttendanceView,
 } from '../../components/attendance';
 import { Loader } from '../../components';
-import { colors, spacing } from '../../theme/theme';
+import { spacing } from '../../theme/theme';
 import Context from '../../context/Context';
+import { useTheme } from '../../context/ThemeContext';
 
 function getRoleFromContext(loginContext) {
   const profile = loginContext?.profile?.data ?? loginContext?.profile;
@@ -59,6 +60,7 @@ function getTimeFromPayload(payload) {
 }
 
 function AttendanceScreen({ navigation }) {
+  const { colors } = useTheme();
   const { attendence: attendenceContext = {}, login: loginContext = {} } = useContext(Context);
   const {
     punchIn,
@@ -199,7 +201,7 @@ function AttendanceScreen({ navigation }) {
 
   return (
     <>
-      <SafeAreaView style={styles.safeArea} edges={['top']} />
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.primary }]} edges={['top']} />
       <AttendanceHeader onBackPress={handleBack} onAddPress={handleAdd} />
       <View style={styles.contentWrap}>
         {loading ? (
@@ -253,9 +255,7 @@ function AttendanceScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    backgroundColor: colors.primary,
-  },
+  safeArea: {},
   contentWrap: {
     flex: 1,
   },
@@ -270,15 +270,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: spacing.xl,
     paddingHorizontal: spacing.lg,
-  },
-  headerWrap: {
-    backgroundColor: colors.primary,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    marginHorizontal: -spacing.lg,
-    marginBottom: 0,
-    paddingBottom: spacing.xs,
-    overflow: 'hidden',
   },
 });
 

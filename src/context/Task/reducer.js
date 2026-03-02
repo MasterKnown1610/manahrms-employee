@@ -44,6 +44,7 @@ const taskHandlers = {
     detailError: null,
     statusUpdating: false,
   }),
+  RESET: () => initialState,
 };
 
 const Reducer = (state, action) => {

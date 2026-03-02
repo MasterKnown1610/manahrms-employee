@@ -1,55 +1,28 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import Icon from '../Icon/Icon';
-import { colors, spacing, borderRadius } from '../../theme/theme';
+import { spacing, borderRadius } from '../../theme/theme';
+import { useTheme } from '../../context/ThemeContext';
 
-const BALANCES = [
-  {
-    key: 'annual',
-    label: 'Annual Leave',
-    icon: 'event',
-    iconColor: colors.primary,
-    used: 12,
-    total: 15,
-    barColor: colors.primary,
-  },
-  {
-    key: 'sick',
-    label: 'Sick Leave',
-    icon: 'work',
-    iconColor: colors.success,
-    used: 5,
-    total: 7,
-    barColor: colors.success,
-  },
-  {
-    key: 'casual',
-    label: 'Casual Leave',
-    icon: 'wb-sunny',
-    iconColor: colors.priorityMedium,
-    used: 2,
-    total: 5,
-    barColor: colors.priorityMedium,
-  },
-];
+function getDefaultBalances(colors) {
+  return [
+    { key: 'annual', label: 'Annual Leave', icon: 'event', iconColor: colors.primary, used: 12, total: 15, barColor: colors.primary },
+    { key: 'sick', label: 'Sick Leave', icon: 'work', iconColor: colors.success, used: 5, total: 7, barColor: colors.success },
+    { key: 'casual', label: 'Casual Leave', icon: 'wb-sunny', iconColor: colors.priorityMedium, used: 2, total: 5, barColor: colors.priorityMedium },
+  ];
+}
 
-function pickMetaForKeyOrLabel(key, label) {
+function pickMetaForKeyOrLabel(key, label, colors) {
   const k = String(key ?? '').toLowerCase();
   const l = String(label ?? '').toLowerCase();
   const text = `${k} ${l}`;
-  if (text.includes('sick')) {
-    return { icon: 'work', iconColor: colors.success, barColor: colors.success };
-  }
-  if (text.includes('casual')) {
-    return { icon: 'wb-sunny', iconColor: colors.priorityMedium, barColor: colors.priorityMedium };
-  }
-  if (text.includes('annual') || text.includes('vacation')) {
-    return { icon: 'event', iconColor: colors.primary, barColor: colors.primary };
-  }
+  if (text.includes('sick')) return { icon: 'work', iconColor: colors.success, barColor: colors.success };
+  if (text.includes('casual')) return { icon: 'wb-sunny', iconColor: colors.priorityMedium, barColor: colors.priorityMedium };
+  if (text.includes('annual') || text.includes('vacation')) return { icon: 'event', iconColor: colors.primary, barColor: colors.primary };
   return { icon: 'event-available', iconColor: colors.primary, barColor: colors.primary };
 }
 
-function normalizeBalanceItem(item, fallbackKey) {
+function normalizeBalanceItem(item, fallbackKey, colors) {
   const obj = item ?? {};
   const key =
     obj.key ??
@@ -97,8 +70,7 @@ function normalizeBalanceItem(item, fallbackKey) {
     (total - used);
 
   const remaining = remainingRaw < 0 ? 0 : remainingRaw;
-
-  const meta = pickMetaForKeyOrLabel(key, label);
+  const meta = pickMetaForKeyOrLabel(key, label, colors);
 
   return {
     key: String(key ?? fallbackKey),
@@ -106,24 +78,22 @@ function normalizeBalanceItem(item, fallbackKey) {
     total: Number.isFinite(total) ? total : 0,
     used: Number.isFinite(used) ? used : 0,
     remaining: Number.isFinite(remaining) ? remaining : 0,
-    icon: meta.icon,
-    iconColor: meta.iconColor,
-    barColor: meta.barColor,
+    ...meta,
   };
 }
 
-function BalanceCard({ label, icon, iconColor, used, total, remaining, barColor }) {
+function BalanceCard({ label, icon, iconColor, used, total, remaining, barColor, colors }) {
   const pct = total > 0 ? (used / total) * 100 : 0;
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
       <Icon name={icon} size={24} color={iconColor} style={styles.cardIcon} />
-      <Text style={styles.cardLabel}>{label}</Text>
+      <Text style={[styles.cardLabel, { color: colors.text }]}>{label}</Text>
       <View style={styles.ratioRow}>
         <Text style={[styles.ratioUsed, { color: barColor }]}>{used}</Text>
-        <Text style={styles.ratioTotal}> / {total}</Text>
+        <Text style={[styles.ratioTotal, { color: colors.text }]}> / {total}</Text>
       </View>
-      <Text style={styles.remainingText}>Remaining: {remaining}</Text>
-      <View style={styles.progressWrap}>
+      <Text style={[styles.remainingText, { color: colors.textSecondary }]}>Remaining: {remaining}</Text>
+      <View style={[styles.progressWrap, { backgroundColor: colors.primaryLight }]}>
         <View style={[styles.progressFill, { width: `${pct}%`, backgroundColor: barColor }]} />
       </View>
     </View>
@@ -131,19 +101,21 @@ function BalanceCard({ label, icon, iconColor, used, total, remaining, barColor 
 }
 
 function LeaveBalancesSection({ items }) {
-  const source = items ?? BALANCES;
+  const { colors } = useTheme();
+  const source = items;
   const list = Array.isArray(source)
     ? source
     : (source?.data ?? source?.balances ?? source?.leaveBalances ?? source?.leave_balances ?? []);
 
+  const defaultBalances = getDefaultBalances(colors);
   const normalized =
-    list && Array.isArray(list)
-      ? list.map((it, idx) => normalizeBalanceItem(it, idx))
-      : BALANCES;
+    list && Array.isArray(list) && list.length > 0
+      ? list.map((it, idx) => normalizeBalanceItem(it, idx, colors))
+      : defaultBalances;
 
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>YOUR BALANCES</Text>
+      <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>YOUR BALANCES</Text>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -159,6 +131,7 @@ function LeaveBalancesSection({ items }) {
             total={b.total}
             remaining={b.remaining}
             barColor={b.barColor}
+            colors={colors}
           />
         ))}
       </ScrollView>
@@ -173,7 +146,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 11,
     fontWeight: '700',
-    color: colors.textSecondary,
     letterSpacing: 0.8,
     marginBottom: spacing.sm,
   },
@@ -184,11 +156,9 @@ const styles = StyleSheet.create({
   },
   card: {
     width: 160,
-    backgroundColor: colors.background,
     borderRadius: borderRadius.md,
     padding: spacing.md,
     borderWidth: 1,
-    borderColor: colors.border,
   },
   cardIcon: {
     marginBottom: spacing.sm,
@@ -196,7 +166,6 @@ const styles = StyleSheet.create({
   cardLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.text,
     marginBottom: spacing.xs,
   },
   ratioRow: {
@@ -211,17 +180,14 @@ const styles = StyleSheet.create({
   ratioTotal: {
     fontSize: 18,
     fontWeight: '700',
-    color: colors.text,
   },
   remainingText: {
     fontSize: 12,
     fontWeight: '500',
-    color: colors.textSecondary,
     marginBottom: spacing.sm,
   },
   progressWrap: {
     height: 6,
-    backgroundColor: colors.primaryLight,
     borderRadius: 3,
     overflow: 'hidden',
   },

@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, TextInput, StyleSheet, Pressable } from 'react-native';
 import Icon from '../Icon/Icon';
-import { colors, spacing, borderRadius } from '../../theme/theme';
+import { spacing, borderRadius } from '../../theme/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 function SearchFilterBar({
   value = '',
@@ -10,12 +11,13 @@ function SearchFilterBar({
   onFilterPress,
   isoptionalFilter = false,
 }) {
+  const { colors } = useTheme();
   return (
     <View style={styles.container}>
-      <View style={styles.searchRow}>
+      <View style={[styles.searchRow, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
         <Icon name="search" size={22} color={colors.placeholder} style={styles.searchIcon} />
         <TextInput
-          style={styles.input}
+          style={[styles.input, { color: colors.text }]}
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
@@ -24,7 +26,7 @@ function SearchFilterBar({
         />
       </View>
       {isoptionalFilter && (
-        <Pressable onPress={onFilterPress} style={styles.filterButton} hitSlop={8}>
+        <Pressable onPress={onFilterPress} style={[styles.filterButton, { backgroundColor: colors.cardBackground, borderColor: colors.border }]} hitSlop={8}>
           <Icon name="tune" size={24} color={colors.textSecondary} />
         </Pressable>
       )}
@@ -43,10 +45,8 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.background,
     borderRadius: borderRadius.sm,
     borderWidth: 1,
-    borderColor: colors.border,
     paddingHorizontal: spacing.md,
     height: 44,
   },
@@ -56,16 +56,13 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 15,
-    color: colors.text,
     paddingVertical: 0,
   },
   filterButton: {
     width: 44,
     height: 44,
     borderRadius: borderRadius.sm,
-    backgroundColor: colors.background,
     borderWidth: 1,
-    borderColor: colors.border,
     justifyContent: 'center',
     alignItems: 'center',
   },

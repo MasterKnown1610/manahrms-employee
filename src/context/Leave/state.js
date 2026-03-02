@@ -1,4 +1,4 @@
-import { useReducer } from 'react';
+import { useReducer, useCallback } from 'react';
 import { API_URLS } from '../../services/config';
 import Reducer from './reducer';
 import { LeaveActions } from './action';
@@ -137,12 +137,15 @@ export const LeaveState = () => {
     }
   };
 
+  const reset = useCallback(() => dispatch({ type: LeaveActions.RESET }), []);
+
   return {
     ...state,
     getLeaveType,
     getLeaveRequests,
     getLeaveBalance,
     applyForLeave,
+    reset,
   };
 };
 

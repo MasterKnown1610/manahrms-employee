@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Platform } from 'react-native';
 import Icon from '../Icon/Icon';
-import { colors, spacing } from '../../theme/theme';
+import { spacing } from '../../theme/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 function formatTimestamp(isoString) {
   if (!isoString) return '';
@@ -34,17 +35,17 @@ function getActivityIcon(type) {
   }
 }
 
-function RecentActivityItem({ activity }) {
+function RecentActivityItem({ activity, colors }) {
   const iconName = getActivityIcon(activity?.type);
   return (
-    <View style={styles.item}>
-      <View style={styles.iconWrap}>
+    <View style={[styles.item, { backgroundColor: colors.cardBackground }]}>
+      <View style={[styles.iconWrap, { backgroundColor: colors.primary }]}>
         <Icon name={iconName} size={20} color={colors.background} />
       </View>
       <View style={styles.content}>
-        <Text style={styles.title} numberOfLines={1}>{activity?.title ?? '—'}</Text>
-        <Text style={styles.description} numberOfLines={2}>{activity?.description ?? ''}</Text>
-        <Text style={styles.meta}>
+        <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>{activity?.title ?? '—'}</Text>
+        <Text style={[styles.description, { color: colors.textSecondary }]} numberOfLines={2}>{activity?.description ?? ''}</Text>
+        <Text style={[styles.meta, { color: colors.placeholder }]}>
           {formatTimestamp(activity?.timestamp)}
           {activity?.user_name ? ` • ${activity.user_name}` : ''}
         </Text>
@@ -54,18 +55,19 @@ function RecentActivityItem({ activity }) {
 }
 
 function RecentActivitiesSection({ activities = [] }) {
+  const { colors } = useTheme();
   if (!activities?.length) return null;
 
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>Recent Activities</Text>
+      <Text style={[styles.sectionTitle, { color: colors.text }]}>Recent Activities</Text>
       <ScrollView
         style={styles.list}
         showsVerticalScrollIndicator={false}
         nestedScrollEnabled
       >
         {activities.slice(0, 10).map((activity, index) => (
-          <RecentActivityItem key={`${activity?.timestamp}-${index}`} activity={activity} />
+          <RecentActivityItem key={`${activity?.timestamp}-${index}`} activity={activity} colors={colors} />
         ))}
       </ScrollView>
     </View>
@@ -79,7 +81,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: colors.text,
     marginBottom: spacing.md,
   },
   list: {
@@ -90,9 +91,9 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
-    backgroundColor: colors.background,
     borderRadius: 12,
     marginBottom: spacing.sm,
+    minHeight: 80,
     ...Platform.select({
       ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 4 },
       android: { elevation: 2 },
@@ -102,7 +103,6 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 8,
-    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: spacing.md,
@@ -113,17 +113,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.text,
     marginBottom: 2,
   },
   description: {
     fontSize: 12,
-    color: colors.textSecondary,
     marginBottom: 2,
   },
   meta: {
     fontSize: 11,
-    color: colors.placeholder,
   },
 });
 

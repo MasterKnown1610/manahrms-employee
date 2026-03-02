@@ -1,36 +1,38 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Icon from '../Icon/Icon';
-import { colors, spacing, borderRadius } from '../../theme/theme';
+import { spacing, borderRadius } from '../../theme/theme';
+import { useTheme } from '../../context/ThemeContext';
 
-function LogEntry({ dateLabel, dayName, checkIn, checkOut, totalHours }) {
+function LogEntry({ dateLabel, dayName, checkIn, checkOut, totalHours, colors }) {
   return (
     <View style={styles.entry}>
-      <View style={styles.dateBox}>
-        <Text style={styles.dateBoxText}>{dateLabel}</Text>
+      <View style={[styles.dateBox, { borderColor: colors.primary }]}>
+        <Text style={[styles.dateBoxText, { color: colors.primary }]}>{dateLabel}</Text>
       </View>
       <View style={styles.entryContent}>
-        <Text style={styles.dayName}>{dayName}</Text>
+        <Text style={[styles.dayName, { color: colors.text }]}>{dayName}</Text>
         <View style={styles.timeRow}>
           <View style={styles.timeChip}>
             <Icon name="schedule" size={12} color={colors.success} />
-            <Text style={styles.timeText}>{checkIn}</Text>
+            <Text style={[styles.timeText, { color: colors.textSecondary }]}>{checkIn}</Text>
           </View>
           <View style={styles.timeChip}>
             <Icon name="schedule" size={12} color={colors.priorityHigh} />
-            <Text style={styles.timeText}>{checkOut}</Text>
+            <Text style={[styles.timeText, { color: colors.textSecondary }]}>{checkOut}</Text>
           </View>
         </View>
       </View>
       <View style={styles.hoursBlock}>
-        <Text style={styles.hoursValue}>{totalHours}</Text>
-        <Text style={styles.hoursLabel}>TOTAL HOURS</Text>
+        <Text style={[styles.hoursValue, { color: colors.text }]}>{totalHours}</Text>
+        <Text style={[styles.hoursLabel, { color: colors.textSecondary }]}>TOTAL HOURS</Text>
       </View>
     </View>
   );
 }
 
 function RecentLogsSection({ logs = [], onViewAll }) {
+  const { colors } = useTheme();
   const defaultLogs = [
     { id: '1', dateLabel: 'OCT 23', dayName: 'Wednesday', checkIn: '08:02 AM', checkOut: '05:15 PM', totalHours: '05h 13m' },
     { id: '2', dateLabel: 'OCT 22', dayName: 'Tuesday', checkIn: '08:02 AM', checkOut: '05:02 PM', totalHours: '09h 07m' },
@@ -40,19 +42,20 @@ function RecentLogsSection({ logs = [], onViewAll }) {
   return (
     <View style={styles.section}>
       <View style={styles.header}>
-        <Text style={styles.title}>Recent Logs</Text>
+        <Text style={[styles.title, { color: colors.text }]}>Recent Logs</Text>
         <Pressable onPress={onViewAll} hitSlop={8}>
-          <Text style={styles.viewAll}>View All</Text>
+          <Text style={[styles.viewAll, { color: colors.primary }]}>View All</Text>
         </Pressable>
       </View>
       {list.map((log) => (
-        <View key={log.id} style={styles.card}>
+        <View key={log.id} style={[styles.card, { backgroundColor: colors.cardBackground, borderLeftColor: colors.primary }]}>
           <LogEntry
             dateLabel={log.dateLabel}
             dayName={log.dayName}
             checkIn={log.checkIn}
             checkOut={log.checkOut}
             totalHours={log.totalHours}
+            colors={colors}
           />
         </View>
       ))}
@@ -73,20 +76,16 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: '700',
-    color: colors.text,
   },
   viewAll: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.primary,
   },
   card: {
-    backgroundColor: colors.background,
     borderRadius: borderRadius.md,
     marginBottom: spacing.sm,
     overflow: 'hidden',
     borderLeftWidth: 4,
-    borderLeftColor: colors.primary,
   },
   entry: {
     flexDirection: 'row',
@@ -95,7 +94,6 @@ const styles = StyleSheet.create({
   },
   dateBox: {
     borderWidth: 1,
-    borderColor: colors.primary,
     borderRadius: borderRadius.sm,
     paddingVertical: spacing.xs,
     paddingHorizontal: spacing.sm,
@@ -105,7 +103,6 @@ const styles = StyleSheet.create({
   dateBoxText: {
     fontSize: 12,
     fontWeight: '700',
-    color: colors.primary,
   },
   entryContent: {
     flex: 1,
@@ -113,7 +110,6 @@ const styles = StyleSheet.create({
   dayName: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.text,
     marginBottom: spacing.xs,
   },
   timeRow: {
@@ -127,7 +123,6 @@ const styles = StyleSheet.create({
   },
   timeText: {
     fontSize: 12,
-    color: colors.textSecondary,
   },
   hoursBlock: {
     alignItems: 'flex-end',
@@ -135,11 +130,9 @@ const styles = StyleSheet.create({
   hoursValue: {
     fontSize: 14,
     fontWeight: '700',
-    color: colors.text,
   },
   hoursLabel: {
     fontSize: 10,
-    color: colors.textSecondary,
     marginTop: 2,
   },
 });

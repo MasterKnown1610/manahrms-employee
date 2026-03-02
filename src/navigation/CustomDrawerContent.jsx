@@ -1,10 +1,11 @@
-import React, { useContext } from 'react';
+import React, { useContext, useMemo } from 'react';
 import { View, Text, StyleSheet, Pressable, Image } from 'react-native';
 import { DrawerContentScrollView } from '@react-navigation/drawer';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from '../components/Icon/Icon';
-import { colors, spacing, borderRadius } from '../theme/theme';
+import { spacing, borderRadius } from '../theme/theme';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import Context from '../context/Context';
 
 const DRAWER_WIDTH = 280;
@@ -49,10 +50,13 @@ function CustomDrawerContent(props) {
   const { navigation, state } = props;
   const insets = useSafeAreaInsets();
   const { logout } = useAuth();
+  const { colors, themeMode, toggleTheme } = useTheme();
   const combinedState = useContext(Context);
   const loginContext = combinedState?.login ?? {};
   const role = getRoleFromContext(loginContext);
   const menuItems = role === 'admin' ? ADMIN_MENU_ITEMS : EMPLOYEE_MENU_ITEMS;
+
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const profile = loginContext?.profile?.data ?? loginContext?.profile;
   const loginData = loginContext?.loginData?.user ?? loginContext?.loginData;
@@ -159,6 +163,18 @@ function CustomDrawerContent(props) {
           })}
         </View>
 
+        {/* Theme toggle */}
+        <Pressable onPress={toggleTheme} style={styles.themeItem}>
+          <Icon
+            name={themeMode === 'dark' ? 'light-mode' : 'dark-mode'}
+            size={22}
+            color={colors.text}
+          />
+          <Text style={styles.themeLabel}>
+            {themeMode === 'dark' ? 'Light mode' : 'Dark mode'}
+          </Text>
+        </Pressable>
+
         {/* Logout */}
         <Pressable onPress={handleLogout} style={styles.logoutItem}>
           <Icon name="logout" size={22} color={colors.error} />
@@ -171,152 +187,169 @@ function CustomDrawerContent(props) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-    borderTopRightRadius: 20,
-    borderBottomRightRadius: 20,
-    overflow: 'hidden',
-  },
-  scrollContent: {
-    paddingTop: spacing.lg,
-    paddingHorizontal: spacing.sm,
-  },
-  brandRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.lg,
-    paddingHorizontal: spacing.sm,
-  },
-  logoBox: {
-    width: 36,
-    height: 36,
-    borderRadius: 8,
-    backgroundColor: '#C8E6C9',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: spacing.sm,
-  },
-  logoImage: {
-    width: 24,
-    height: 24,
-  },
-  brandName: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  userCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.primaryLight,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    marginBottom: spacing.lg,
-  },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'transparent',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: spacing.md,
-    overflow: 'hidden',
-  },
-  avatarLogo: {
-    width: 40,
-    height: 40,
-  },
-  userInfo: {
-    flex: 1,
-  },
-  userName: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  userRole: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    marginTop: 2,
-  },
-  menu: {
-    marginBottom: spacing.lg,
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.sm + 2,
-    paddingHorizontal: spacing.md,
-    borderRadius: borderRadius.sm,
-    marginBottom: 2,
-  },
-  menuItemActive: {
-    backgroundColor: colors.primary,
-  },
-  menuLabel: {
-    fontSize: 15,
-    fontWeight: '500',
-    color: colors.text,
-    marginLeft: spacing.md,
-    flex: 1,
-  },
-  menuLabelActive: {
-    color: colors.background,
-    fontWeight: '600',
-  },
-  menuBadge: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.primary,
-  },
-  logoutItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.sm + 2,
-    paddingHorizontal: spacing.md,
-    borderRadius: borderRadius.sm,
-    marginTop: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  logoutLabel: {
-    fontSize: 15,
-    fontWeight: '500',
-    color: colors.error,
-    marginLeft: spacing.md,
-  },
-  bottomBar: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    backgroundColor: colors.background,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    paddingTop: spacing.sm,
-  },
-  bottomTab: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: spacing.xs,
-  },
-  bottomTabLabel: {
-    fontSize: 10,
-    color: colors.textSecondary,
-    marginTop: 4,
-    fontWeight: '500',
-  },
-  bottomTabLabelActive: {
-    color: colors.primary,
-    fontWeight: '600',
-  },
-});
+function createStyles(colors) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+      borderTopRightRadius: 20,
+      borderBottomRightRadius: 20,
+      overflow: 'hidden',
+    },
+    scrollContent: {
+      paddingTop: spacing.lg,
+      paddingHorizontal: spacing.sm,
+    },
+    brandRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: spacing.lg,
+      paddingHorizontal: spacing.sm,
+    },
+    logoBox: {
+      width: 36,
+      height: 36,
+      borderRadius: 8,
+      backgroundColor: '#C8E6C9',
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: spacing.sm,
+    },
+    logoImage: {
+      width: 24,
+      height: 24,
+    },
+    brandName: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: colors.text,
+    },
+    userCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.primaryLight,
+      borderRadius: borderRadius.md,
+      padding: spacing.md,
+      marginBottom: spacing.lg,
+    },
+    avatar: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      backgroundColor: 'transparent',
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: spacing.md,
+      overflow: 'hidden',
+    },
+    avatarLogo: {
+      width: 40,
+      height: 40,
+    },
+    userInfo: {
+      flex: 1,
+    },
+    userName: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: colors.text,
+    },
+    userRole: {
+      fontSize: 13,
+      color: colors.textSecondary,
+      marginTop: 2,
+    },
+    menu: {
+      marginBottom: spacing.lg,
+    },
+    menuItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: spacing.sm + 2,
+      paddingHorizontal: spacing.md,
+      borderRadius: borderRadius.sm,
+      marginBottom: 2,
+    },
+    menuItemActive: {
+      backgroundColor: colors.primary,
+    },
+    menuLabel: {
+      fontSize: 15,
+      fontWeight: '500',
+      color: colors.text,
+      marginLeft: spacing.md,
+      flex: 1,
+    },
+    menuLabelActive: {
+      color: colors.background,
+      fontWeight: '600',
+    },
+    menuBadge: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: colors.primary,
+    },
+    themeItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: spacing.sm + 2,
+      paddingHorizontal: spacing.md,
+      borderRadius: borderRadius.sm,
+      marginBottom: 2,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+      marginTop: spacing.sm,
+    },
+    themeLabel: {
+      fontSize: 15,
+      fontWeight: '500',
+      color: colors.text,
+      marginLeft: spacing.md,
+    },
+    logoutItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: spacing.sm + 2,
+      paddingHorizontal: spacing.md,
+      borderRadius: borderRadius.sm,
+      marginTop: spacing.xs,
+    },
+    logoutLabel: {
+      fontSize: 15,
+      fontWeight: '500',
+      color: colors.error,
+      marginLeft: spacing.md,
+    },
+    bottomBar: {
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      bottom: 0,
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+      alignItems: 'center',
+      backgroundColor: colors.background,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+      paddingTop: spacing.sm,
+    },
+    bottomTab: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: spacing.xs,
+    },
+    bottomTabLabel: {
+      fontSize: 10,
+      color: colors.textSecondary,
+      marginTop: 4,
+      fontWeight: '500',
+    },
+    bottomTabLabelActive: {
+      color: colors.primary,
+      fontWeight: '600',
+    },
+  });
+}
 
 export default CustomDrawerContent;

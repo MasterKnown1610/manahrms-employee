@@ -11,16 +11,18 @@ import { Loader } from '../../components';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import Icon from '../../components/Icon/Icon';
-import { colors, spacing } from '../../theme/theme';
+import { spacing } from '../../theme/theme';
 import Context from '../../context/Context';
+import { useTheme } from '../../context/ThemeContext';
 
 function ProjectsHeader({ onBackPress, onNotificationPress }) {
+  const { colors } = useTheme();
   return (
-    <View style={styles.header}>
+    <View style={[styles.header, { backgroundColor: colors.primary }]}>
       <Pressable onPress={onBackPress} style={styles.iconButton} hitSlop={8}>
         <Icon name="arrow-back" size={24} color={colors.background} />
       </Pressable>
-      <Text style={styles.headerTitle}>Projects</Text>
+      <Text style={[styles.headerTitle, { color: colors.background }]}>Projects</Text>
       <Pressable onPress={onNotificationPress} style={styles.iconButton} hitSlop={8}>
         <Icon name="notifications" size={24} color={colors.background} />
       </Pressable>
@@ -55,49 +57,56 @@ function formatTargetDate(isoDate) {
   });
 }
 
-function ProjectCard({ project }) {
+function ProjectCard({ project, onPress }) {
+  const { colors } = useTheme();
   const name = project?.name ?? '—';
   const client = project?.client ?? '—';
   const number_of_days = project?.number_of_days ?? 0;
   const target_date = formatTargetDate(project?.target_date);
   const is_active = project?.is_active === true;
 
-  return (
-    <View style={styles.card}>
+  const cardContent = (
+    <View style={[styles.card, { backgroundColor: colors.cardBackground, borderLeftColor: colors.primary }]}>
       <View style={styles.cardHeader}>
-        <View style={styles.cardIconWrap}>
+        <View style={[styles.cardIconWrap, { backgroundColor: colors.primaryLight }]}>
           <Icon name="folder" size={24} color={colors.primary} />
         </View>
         <View style={styles.cardTitleWrap}>
-          <Text style={styles.cardTitle} numberOfLines={1}>{name}</Text>
-          <View style={[styles.statusBadge, is_active ? styles.statusActive : styles.statusInactive]}>
-            <Text style={[styles.statusText, is_active ? styles.statusTextActive : styles.statusTextInactive]}>
+          <Text style={[styles.cardTitle, { color: colors.text }]} numberOfLines={1}>{name}</Text>
+          <View style={[styles.statusBadge, is_active ? { backgroundColor: colors.success } : { backgroundColor: colors.textSecondary }]}>
+            <Text style={[styles.statusText, { color: colors.background }]}>
               {is_active ? 'Active' : 'Inactive'}
             </Text>
           </View>
         </View>
       </View>
-      <View style={styles.cardDivider} />
+      <View style={[styles.cardDivider, { backgroundColor: colors.border }]} />
       <View style={styles.cardRow}>
         <Icon name="business" size={16} color={colors.textSecondary} />
-        <Text style={styles.cardLabel}>Client</Text>
-        <Text style={styles.cardValue} numberOfLines={1}>{client}</Text>
+        <Text style={[styles.cardLabel, { color: colors.textSecondary }]}>Client</Text>
+        <Text style={[styles.cardValue, { color: colors.text }]} numberOfLines={1}>{client}</Text>
       </View>
       <View style={styles.cardRow}>
         <Icon name="schedule" size={16} color={colors.textSecondary} />
-        <Text style={styles.cardLabel}>Duration</Text>
-        <Text style={styles.cardValue}>{number_of_days} days</Text>
+        <Text style={[styles.cardLabel, { color: colors.textSecondary }]}>Duration</Text>
+        <Text style={[styles.cardValue, { color: colors.text }]}>{number_of_days} days</Text>
       </View>
       <View style={styles.cardRow}>
         <Icon name="event" size={16} color={colors.textSecondary} />
-        <Text style={styles.cardLabel}>Target</Text>
-        <Text style={styles.cardValue}>{target_date}</Text>
+        <Text style={[styles.cardLabel, { color: colors.textSecondary }]}>Target</Text>
+        <Text style={[styles.cardValue, { color: colors.text }]}>{target_date}</Text>
       </View>
     </View>
   );
+
+  if (typeof onPress === 'function') {
+    return <Pressable onPress={onPress} style={({ pressed }) => [pressed && styles.cardPressed]}>{cardContent}</Pressable>;
+  }
+  return cardContent;
 }
 
-function ProjectsScreen({ navigation }) {
+function ProjectsScreen({ navigation, route }) {
+  const { colors } = useTheme();
   const { projects: projectsContext } = useContext(Context);
   const {
     queryProjects,
@@ -105,6 +114,7 @@ function ProjectsScreen({ navigation }) {
     loading,
     error,
   } = projectsContext ?? {};
+  const selectForTaskFilter = route?.params?.selectForTaskFilter === true;
 
   const fetchProjects = useCallback(() => {
     if (typeof queryProjects === 'function') {
@@ -125,7 +135,7 @@ function ProjectsScreen({ navigation }) {
 
   return (
     <>
-      <SafeAreaView style={styles.safeArea} edges={['top']} />
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.primary }]} edges={['top']} />
       <ProjectsHeader onBackPress={handleBack} onNotificationPress={handleNotification} />
       <ScrollView
         style={styles.scroll}
@@ -145,22 +155,34 @@ function ProjectsScreen({ navigation }) {
           </View>
         ) : error ? (
           <View style={styles.centered}>
-            <Text style={styles.errorText}>{error}</Text>
+            <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
           </View>
         ) : projectsList.length === 0 ? (
           <View style={styles.centered}>
-            <Text style={styles.emptyText}>No projects found.</Text>
+            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No projects found.</Text>
           </View>
         ) : (
           <>
             {pagination?.total_items != null && (
-              <Text style={styles.resultCount}>
+              <Text style={[styles.resultCount, { color: colors.textSecondary }]}>
                 {pagination.total_items} project{pagination.total_items !== 1 ? 's' : ''}
               </Text>
             )}
             <View style={styles.list}>
               {projectsList.map((project) => (
-                <ProjectCard key={project?.id ?? project?.name} project={project} />
+                <ProjectCard
+                  key={project?.id ?? project?.name}
+                  project={project}
+                  onPress={() => {
+                    const projectId = project?.id ?? project?.project_id;
+                    const projectName = project?.name ?? '—';
+                    if (selectForTaskFilter) {
+                      navigation.replace('Tasks', { projectId, projectName });
+                    } else {
+                      navigation.navigate('Tasks', { projectId, projectName });
+                    }
+                  }}
+                />
               ))}
             </View>
           </>
@@ -171,16 +193,13 @@ function ProjectsScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    backgroundColor: colors.primary,
-  },
+  safeArea: {},
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.md,
-    backgroundColor: colors.primary,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
     marginBottom: 20,
@@ -188,7 +207,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: colors.background,
   },
   iconButton: {
     width: 40,
@@ -209,28 +227,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   errorText: {
-    color: colors.error,
     textAlign: 'center',
   },
   emptyText: {
-    color: colors.textSecondary,
     fontSize: 16,
   },
   resultCount: {
     fontSize: 13,
-    color: colors.textSecondary,
     marginBottom: spacing.sm,
     paddingHorizontal: 2,
   },
   list: {
     gap: spacing.md,
   },
+  cardPressed: {
+    opacity: 0.85,
+  },
   card: {
-    backgroundColor: colors.surface,
     borderRadius: 14,
     padding: spacing.md,
     borderLeftWidth: 4,
-    borderLeftColor: colors.primary,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
@@ -246,7 +262,6 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: colors.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: spacing.md,
@@ -262,7 +277,6 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: colors.text,
     flex: 1,
   },
   statusBadge: {
@@ -270,25 +284,12 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 20,
   },
-  statusActive: {
-    backgroundColor: '#E8F5E9',
-  },
-  statusInactive: {
-    backgroundColor: colors.cardBackground,
-  },
   statusText: {
     fontSize: 12,
     fontWeight: '600',
   },
-  statusTextActive: {
-    color: colors.success,
-  },
-  statusTextInactive: {
-    color: colors.textSecondary,
-  },
   cardDivider: {
     height: 1,
-    backgroundColor: colors.border,
     marginVertical: spacing.sm,
   },
   cardRow: {
@@ -298,14 +299,12 @@ const styles = StyleSheet.create({
   },
   cardLabel: {
     fontSize: 13,
-    color: colors.textSecondary,
     marginLeft: spacing.sm,
     width: 64,
   },
   cardValue: {
     fontSize: 14,
     fontWeight: '500',
-    color: colors.text,
     flex: 1,
   },
 });

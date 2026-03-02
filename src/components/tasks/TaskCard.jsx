@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Icon from '../Icon/Icon';
-import { colors, spacing, borderRadius } from '../../theme/theme';
+import { spacing, borderRadius } from '../../theme/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 function formatDate(dateStr) {
   if (!dateStr) return '—';
@@ -9,20 +10,21 @@ function formatDate(dateStr) {
   return isNaN(d.getTime()) ? dateStr : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
-const PRIORITY_STYLES = {
-  high: { bg: colors.priorityHigh, label: 'High' },
-  medium: { bg: colors.priorityMedium, label: 'Medium' },
-  low: { bg: '#2196F3', label: 'Low' },
+const PRIORITY_BG = {
+  high: 'priorityHigh',
+  medium: 'priorityMedium',
+  low: '#2196F3',
 };
 
-// API status: open, in_progress, closed
-const STATUS_CONFIG = {
-  open: { label: 'Open', color: colors.textSecondary, icon: 'radio-button-unchecked' },
-  in_progress: { label: 'In Progress', color: colors.primary, icon: 'radio-button-checked' },
-  closed: { label: 'Closed', color: colors.success, icon: 'check-circle' },
-  pending: { label: 'Pending', color: colors.priorityMedium, icon: 'radio-button-unchecked' },
-  completed: { label: 'Completed', color: colors.success, icon: 'check-circle' },
-};
+function getStatusConfig(colors) {
+  return {
+    open: { label: 'Open', color: colors.textSecondary, icon: 'radio-button-unchecked' },
+    in_progress: { label: 'In Progress', color: colors.primary, icon: 'radio-button-checked' },
+    closed: { label: 'Closed', color: colors.success, icon: 'check-circle' },
+    pending: { label: 'Pending', color: colors.priorityMedium, icon: 'radio-button-unchecked' },
+    completed: { label: 'Completed', color: colors.success, icon: 'check-circle' },
+  };
+}
 
 function normalizeStatus(status) {
   if (!status) return 'open';
@@ -43,55 +45,64 @@ function TaskCard({
   onViewDetails,
   onStart,
 }) {
+  const { colors } = useTheme();
   const priorityKey = priority ? String(priority).toLowerCase() : 'medium';
-  const priorityStyle = PRIORITY_STYLES[priorityKey] || PRIORITY_STYLES.medium;
+  const priorityBg = typeof PRIORITY_BG[priorityKey] === 'string' && PRIORITY_BG[priorityKey].startsWith('#')
+    ? PRIORITY_BG[priorityKey]
+    : colors[PRIORITY_BG[priorityKey]] ?? colors.priorityMedium;
+  const priorityLabels = { high: 'High', medium: 'Medium', low: 'Low' };
+  const statusConfigMap = getStatusConfig(colors);
   const statusKey = normalizeStatus(status);
-  const statusConfig = STATUS_CONFIG[statusKey] || STATUS_CONFIG.open;
+  const statusConfig = statusConfigMap[statusKey] || statusConfigMap.open;
   const createdFormatted = formatDate(created_at);
   const dueFormatted = formatDate(due_date);
 
   return (
     <Pressable
-      style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
+      style={({ pressed }) => [
+        styles.card,
+        { backgroundColor: colors.cardBackground, borderColor: colors.border },
+        pressed && { opacity: 0.85, backgroundColor: colors.backgroundInput },
+      ]}
       onPress={onViewDetails}
       hitSlop={0}
     >
       <View style={styles.topRow}>
-        <View style={[styles.priorityBadge, { backgroundColor: priorityStyle.bg }]}>
-          <Text style={styles.priorityText}>{priorityStyle.label}</Text>
+        <View style={[styles.priorityBadge, { backgroundColor: priorityBg }]}>
+          <Text style={[styles.priorityText, { color: colors.background }]}>{priorityLabels[priorityKey] || 'Medium'}</Text>
         </View>
         <Text style={[styles.statusText, { color: statusConfig.color }]}>
           {statusConfig.label}
         </Text>
       </View>
 
-      <Text style={styles.title} numberOfLines={2}>{title || 'Untitled task'}</Text>
+      <Text style={[styles.title, { color: colors.text }]} numberOfLines={2}>{title || 'Untitled task'}</Text>
 
       {description ? (
-        <Text style={styles.description} numberOfLines={2}>{description}</Text>
+        <Text style={[styles.description, { color: colors.textSecondary }]} numberOfLines={2}>{description}</Text>
       ) : null}
 
       {projectName ? (
         <View style={styles.metaRow}>
           <Icon name="business" size={16} color={colors.textSecondary} />
-          <Text style={styles.metaText}>{projectName}</Text>
+          <Text style={[styles.metaText, { color: colors.textSecondary }]}>{projectName}</Text>
         </View>
       ) : null}
 
       <View style={styles.metaRow}>
         <Icon name="event" size={16} color={colors.textSecondary} />
-        <Text style={styles.metaText}>Created: {createdFormatted}</Text>
+        <Text style={[styles.metaText, { color: colors.textSecondary }]}>Created: {createdFormatted}</Text>
       </View>
 
       {due_date ? (
         <View style={styles.metaRow}>
           <Icon name="event" size={16} color={colors.textSecondary} />
-          <Text style={styles.metaText}>Due: {dueFormatted}</Text>
+          <Text style={[styles.metaText, { color: colors.textSecondary }]}>Due: {dueFormatted}</Text>
         </View>
       ) : null}
 
-      <View style={styles.footer}>
-        <Text style={styles.detailsLink}>View Details</Text>
+      <View style={[styles.footer, { borderTopColor: colors.border }]}>
+        <Text style={[styles.detailsLink, { color: colors.primary }]}>View Details</Text>
       </View>
     </Pressable>
   );
@@ -99,16 +110,10 @@ function TaskCard({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.background,
     borderRadius: borderRadius.md,
     padding: spacing.md,
     marginBottom: spacing.md,
     borderWidth: 1,
-    borderColor: colors.border,
-  },
-  cardPressed: {
-    opacity: 0.85,
-    backgroundColor: colors.backgroundInput,
   },
   topRow: {
     flexDirection: 'row',
@@ -124,23 +129,15 @@ const styles = StyleSheet.create({
   priorityText: {
     fontSize: 10,
     fontWeight: '700',
-    color: colors.background,
     letterSpacing: 0.3,
-  },
-  progressText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: colors.primary,
   },
   title: {
     fontSize: 16,
     fontWeight: '700',
-    color: colors.text,
     marginBottom: spacing.sm,
   },
   description: {
     fontSize: 14,
-    color: colors.textSecondary,
     marginBottom: spacing.sm,
     lineHeight: 20,
   },
@@ -152,19 +149,6 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontSize: 13,
-    color: colors.textSecondary,
-  },
-  progressBarWrap: {
-    height: 6,
-    backgroundColor: colors.primaryLight,
-    borderRadius: 3,
-    marginTop: spacing.sm,
-    overflow: 'hidden',
-  },
-  progressBarFill: {
-    height: '100%',
-    backgroundColor: colors.primary,
-    borderRadius: 3,
   },
   footer: {
     flexDirection: 'row',
@@ -173,12 +157,6 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     paddingTop: spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  statusRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
   },
   statusText: {
     fontSize: 13,
@@ -187,18 +165,6 @@ const styles = StyleSheet.create({
   detailsLink: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.primary,
-  },
-  startButton: {
-    backgroundColor: colors.primary,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.lg,
-    borderRadius: borderRadius.sm,
-  },
-  startButtonText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: colors.background,
   },
 });
 

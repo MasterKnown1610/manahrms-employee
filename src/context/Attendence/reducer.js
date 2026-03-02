@@ -46,9 +46,10 @@ const attendenceHandlers = {
     loading: false,
     error: null,
   }),
+  RESET: () => initialState,
 }
 
-const  Reducer = (state, action) => {
+const Reducer = (state, action) => {
   const handler= attendenceHandlers[action.type];
   return handler ? handler(state, action) : state;
 };

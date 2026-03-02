@@ -49,9 +49,12 @@ export const ProjectsState = () => {
     }
   }, [token]);
 
+  const reset = useCallback(() => dispatch({ type: ProjectActions.RESET }), []);
+
   return {
     ...state,
     queryProjects,
+    reset,
   };
 };
 

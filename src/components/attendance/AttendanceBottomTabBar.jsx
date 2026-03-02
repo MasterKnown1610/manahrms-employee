@@ -2,7 +2,8 @@ import React from 'react';
 import { View, Text, StyleSheet, Pressable, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from '../Icon/Icon';
-import { colors, spacing } from '../../theme/theme';
+import { spacing } from '../../theme/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 const TABS = [
   { key: 'Dashboard', label: 'Dashboard', icon: 'dashboard' },
@@ -13,11 +14,12 @@ const TABS = [
 ];
 
 function AttendanceBottomTabBar({ activeTab = 'Attendance', onTabPress }) {
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const bottomPadding = Math.max(insets.bottom, spacing.sm);
 
   return (
-    <View style={[styles.container, { paddingBottom: bottomPadding }]}>
+    <View style={[styles.container, { paddingBottom: bottomPadding, backgroundColor: colors.background, borderTopColor: colors.border }]}>
       <View style={styles.bar}>
         {TABS.map((tab) => {
           const isActive = activeTab === tab.key && !tab.isCenter;
@@ -26,7 +28,7 @@ function AttendanceBottomTabBar({ activeTab = 'Attendance', onTabPress }) {
               <Pressable
                 key={tab.key}
                 onPress={() => onTabPress?.(tab.key)}
-                style={styles.centerButton}
+                style={[styles.centerButton, { backgroundColor: colors.primary }]}
                 hitSlop={8}
               >
                 <Icon name="add" size={28} color={colors.background} />
@@ -48,7 +50,8 @@ function AttendanceBottomTabBar({ activeTab = 'Attendance', onTabPress }) {
               <Text
                 style={[
                   styles.tabLabel,
-                  isActive && styles.tabLabelActive,
+                  { color: colors.textSecondary },
+                  isActive && [styles.tabLabelActive, { color: colors.primary }],
                 ]}
               >
                 {tab.label}
@@ -63,10 +66,8 @@ function AttendanceBottomTabBar({ activeTab = 'Attendance', onTabPress }) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.background,
     paddingTop: spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
     ...Platform.select({
       ios: {
         shadowColor: '#000',
@@ -93,19 +94,16 @@ const styles = StyleSheet.create({
   },
   tabLabel: {
     fontSize: 10,
-    color: colors.textSecondary,
     marginTop: 4,
     fontWeight: '500',
   },
   tabLabelActive: {
-    color: colors.primary,
     fontWeight: '600',
   },
   centerButton: {
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: spacing.md,

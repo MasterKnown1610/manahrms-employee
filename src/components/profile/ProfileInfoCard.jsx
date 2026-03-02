@@ -1,24 +1,23 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, Platform } from 'react-native';
 import Icon from '../Icon/Icon';
-import { colors, spacing, borderRadius } from '../../theme/theme';
+import { spacing, borderRadius } from '../../theme/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 /**
  * Single row: { iconName, label, value } for display-only, or
  * { iconName, label, onPress } for navigable row (shows arrow).
  */
-function ProfileInfoRow({ iconName, label, value, onPress }) {
+function ProfileInfoRow({ iconName, label, value, onPress, colors }) {
   const isNav = Boolean(onPress);
-  const Wrapper = isNav ? Pressable : View;
-
   const content = (
     <>
-      <View style={styles.iconBox}>
+      <View style={[styles.iconBox, { backgroundColor: colors.primary }]}>
         <Icon name={iconName} size={20} color={colors.background} />
       </View>
       <View style={styles.textBlock}>
-        <Text style={styles.label}>{label}</Text>
-        {value != null && <Text style={styles.value}>{value}</Text>}
+        <Text style={[styles.label, { color: colors.text }]}>{label}</Text>
+        {value != null && <Text style={[styles.value, { color: colors.textSecondary }]}>{value}</Text>}
       </View>
       {isNav && (
         <Icon name="chevron-right" size={24} color={colors.textSecondary} />
@@ -28,25 +27,19 @@ function ProfileInfoRow({ iconName, label, value, onPress }) {
 
   if (isNav) {
     return (
-      <Pressable
-        onPress={onPress}
-        style={({ pressed }) => [
-          styles.row,
-          pressed && styles.rowPressed,
-        ]}
-      >
+      <Pressable onPress={onPress} style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}>
         {content}
       </Pressable>
     );
   }
-
   return <View style={styles.row}>{content}</View>;
 }
 
 function ProfileInfoCard({ sectionTitle, rows }) {
+  const { colors } = useTheme();
   return (
-    <View style={styles.card}>
-      <Text style={styles.sectionTitle}>{sectionTitle}</Text>
+    <View style={[styles.card, { backgroundColor: colors.cardBackground }]}>
+      <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{sectionTitle}</Text>
       {rows.map((row, index) => (
         <View key={row.label}>
           <ProfileInfoRow
@@ -54,8 +47,9 @@ function ProfileInfoCard({ sectionTitle, rows }) {
             label={row.label}
             value={row.value}
             onPress={row.onPress}
+            colors={colors}
           />
-          {index < rows.length - 1 && <View style={styles.separator} />}
+          {index < rows.length - 1 && <View style={[styles.separator, { backgroundColor: colors.border }]} />}
         </View>
       ))}
     </View>
@@ -64,7 +58,6 @@ function ProfileInfoCard({ sectionTitle, rows }) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.background,
     borderRadius: borderRadius.md,
     padding: spacing.md,
     marginBottom: spacing.lg,
@@ -81,7 +74,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 11,
     fontWeight: '600',
-    color: colors.textSecondary,
     letterSpacing: 0.8,
     marginBottom: spacing.md,
   },
@@ -97,7 +89,6 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 8,
-    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: spacing.md,
@@ -108,16 +99,13 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.text,
   },
   value: {
     fontSize: 13,
-    color: colors.textSecondary,
     marginTop: 2,
   },
   separator: {
     height: 1,
-    backgroundColor: colors.border,
     marginLeft: 36 + spacing.md,
   },
 });

@@ -1,11 +1,13 @@
 import React from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 import Icon from '../Icon/Icon';
-import { colors, spacing } from '../../theme/theme';
+import { spacing } from '../../theme/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 function TasksFAB({ onPress }) {
+  const { colors } = useTheme();
   return (
-    <Pressable onPress={onPress} style={styles.fab}>
+    <Pressable onPress={onPress} style={[styles.fab, { backgroundColor: colors.primary }]}>
       <Icon name="add" size={28} color={colors.background} />
     </Pressable>
   );
@@ -19,7 +21,6 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',

@@ -1,19 +1,22 @@
 import React from 'react';
-import { Pressable, Text, View, StyleSheet } from 'react-native';
+import { Pressable, Text, StyleSheet } from 'react-native';
 import Icon from '../Icon/Icon';
-import { colors, spacing, typography, borderRadius } from '../../theme/theme';
+import { spacing, typography, borderRadius } from '../../theme/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 function ProfileLogoutButton({ onPress }) {
+  const { colors } = useTheme();
   return (
     <Pressable
       onPress={onPress}
       style={({ pressed }) => [
         styles.button,
+        { borderColor: colors.error, backgroundColor: colors.background },
         pressed && styles.pressed,
       ]}
     >
       <Icon name="logout" size={22} color={colors.error} />
-      <Text style={styles.text}>Logout</Text>
+      <Text style={[styles.text, { color: colors.error }]}>Logout</Text>
     </Pressable>
   );
 }
@@ -26,8 +29,6 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: borderRadius.md,
     borderWidth: 2,
-    borderColor: colors.error,
-    backgroundColor: colors.background,
     paddingHorizontal: spacing.lg,
     marginBottom: spacing.lg,
   },
@@ -36,7 +37,6 @@ const styles = StyleSheet.create({
   },
   text: {
     ...typography.button,
-    color: colors.error,
     marginLeft: spacing.sm,
   },
 });

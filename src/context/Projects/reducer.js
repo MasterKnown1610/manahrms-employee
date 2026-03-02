@@ -17,6 +17,7 @@ const projectHandlers = {
     loading: false,
     error: null,
   }),
+  RESET: () => initialState,
 };
 
 const Reducer = (state, action) => {

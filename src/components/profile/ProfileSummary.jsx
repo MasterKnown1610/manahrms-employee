@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, Image } from 'react-native';
 import Icon from '../Icon/Icon';
-import { colors, spacing } from '../../theme/theme';
+import { spacing } from '../../theme/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 function ProfileSummary({
   profileImageUri,
@@ -10,10 +11,11 @@ function ProfileSummary({
   department = 'DESIGN DEPT',
   onEditPhotoPress,
 }) {
+  const { colors } = useTheme();
   return (
     <View style={styles.container}>
       <View style={styles.avatarWrap}>
-        <View style={styles.avatar}>
+        <View style={[styles.avatar, { backgroundColor: colors.primaryLight }]}>
           {profileImageUri ? (
             <Image source={{ uri: profileImageUri }} style={styles.avatarImage} />
           ) : (
@@ -22,15 +24,15 @@ function ProfileSummary({
         </View>
         <Pressable
           onPress={onEditPhotoPress}
-          style={styles.editButton}
+          style={[styles.editButton, { backgroundColor: colors.primary }]}
           hitSlop={8}
         >
           <Icon name="edit" size={16} color={colors.background} />
         </Pressable>
       </View>
-      <Text style={styles.name}>{name}</Text>
-      {designation ? <Text style={styles.designation}>{designation}</Text> : null}
-      {department ? <Text style={styles.department}>{department}</Text> : null}
+      <Text style={[styles.name, { color: colors.text }]}>{name}</Text>
+      {designation ? <Text style={[styles.designation, { color: colors.primary }]}>{designation}</Text> : null}
+      {department ? <Text style={[styles.department, { color: colors.textSecondary }]}>{department}</Text> : null}
     </View>
   );
 }
@@ -49,7 +51,6 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: colors.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
@@ -66,25 +67,21 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
   name: {
     fontSize: 22,
     fontWeight: '700',
-    color: colors.text,
     marginBottom: spacing.xs,
   },
   designation: {
     fontSize: 14,
     fontWeight: '500',
-    color: colors.primary,
     marginBottom: spacing.xs,
   },
   department: {
     fontSize: 11,
-    color: colors.textSecondary,
     letterSpacing: 0.5,
   },
 });

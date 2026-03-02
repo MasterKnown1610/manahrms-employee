@@ -12,7 +12,8 @@ import {
 } from '../../components/profile';
 import { useAuth } from '../../context/AuthContext';
 import Context from '../../context/Context';
-import { colors, spacing } from '../../theme/theme';
+import { spacing } from '../../theme/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 function formatDate(isoString) {
   if (!isoString) return '—';
@@ -42,6 +43,7 @@ function getProfileDisplayData(profile) {
 }
 
 function ProfileScreen({ navigation }) {
+  const { colors } = useTheme();
   const { logout } = useAuth();
   const { login: loginContext } = useContext(Context);
   const { profile, getProfile } = loginContext ?? {};
@@ -83,11 +85,11 @@ function ProfileScreen({ navigation }) {
 
   return (
     <>
-    <SafeAreaView style={styles.safeArea} edges={['top']}/>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.primary }]} edges={['top']} />
       <ProfileHeader onBackPress={handleBack} onMenuPress={handleMenuPress} />
 
       <ScrollView
-        style={styles.scroll}
+        style={[styles.scroll, { backgroundColor: colors.background }]}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
@@ -127,12 +129,9 @@ function ProfileScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    backgroundColor: colors.primary,
-  },
+  safeArea: {},
   scroll: {
     flex: 1,
-    backgroundColor: colors.cardBackground,
   },
   scrollContent: {
     paddingHorizontal: spacing.lg,

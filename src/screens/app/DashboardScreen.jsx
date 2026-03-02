@@ -10,8 +10,9 @@ import {
   RecentActivitiesSection,
   BottomTabBar,
 } from '../../components/dashboard';
-import { colors, spacing } from '../../theme/theme';
+import { spacing } from '../../theme/theme';
 import Context from '../../context/Context';
+import { useTheme } from '../../context/ThemeContext';
 
 function getRoleFromContext(loginContext) {
   const profile = loginContext?.profile?.data ?? loginContext?.profile;
@@ -28,6 +29,7 @@ function getTimeBasedGreeting() {
 }
 
 function DashboardScreen({ navigation }) {
+  const { colors } = useTheme();
   const [activeTab, setActiveTab] = useState('dashboard');
   const { dashboard: dashboardContext, login: loginContext } = useContext(Context);
   const { dashboard, dashboardAdminOverview, loading: dashboardLoading, getDashboard, getdashboardadminoverview } = dashboardContext ?? {};
@@ -65,7 +67,7 @@ function DashboardScreen({ navigation }) {
   };
 
   const handleViewAllTasks = () => {
-    // Navigate to tasks list
+    navigation.navigate('Tasks');
   };
 
   const handleTaskPress = (task) => {
@@ -95,7 +97,7 @@ function DashboardScreen({ navigation }) {
 
   return (
     <>
-    <SafeAreaView style={styles.safeArea} edges={["top"]}/>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.primary }]} edges={['top']} />
       
         <DashboardHeader
           userName={userName}
@@ -120,7 +122,7 @@ function DashboardScreen({ navigation }) {
             onViewAll={handleViewAllTasks}
             onTaskPress={handleTaskPress}
             onTaskCheck={handleTaskCheck}
-            sectionTitle={role === 'admin' ? 'Recent Tasks' : "Today's Tasks"}
+            sectionTitle={'Recent Tasks' }
           />
 
           {role === 'admin' ? (
@@ -140,9 +142,7 @@ function DashboardScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    backgroundColor: colors.primary,
-  },
+  safeArea: {},
   scroll: {
     flex: 1,
   },
@@ -152,15 +152,6 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: spacing.lg,
     marginTop: 0,
-  },
-  headerWrap: {
-    backgroundColor: colors.primary,
-    overflow: 'hidden',
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    marginHorizontal: -spacing.lg,
-    marginBottom: spacing.sm,
-    paddingBottom: spacing.sm,
   },
 });
 

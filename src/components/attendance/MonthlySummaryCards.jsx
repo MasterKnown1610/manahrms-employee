@@ -1,21 +1,26 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, spacing, borderRadius } from '../../theme/theme';
+import { spacing, borderRadius } from '../../theme/theme';
+import { useTheme } from '../../context/ThemeContext';
 
-const CARD_CONFIG = [
-  { key: 'workDays', label: 'WORK DAYS', valueKey: 'workDays', color: colors.primary },
-  { key: 'present', label: 'PRESENT', valueKey: 'present', color: colors.success },
-  { key: 'absent', label: 'ABSENT', valueKey: 'absent', color: colors.priorityHigh },
-];
+function getCardConfig(colors) {
+  return [
+    { key: 'workDays', label: 'WORK DAYS', valueKey: 'workDays', color: colors.primary },
+    { key: 'present', label: 'PRESENT', valueKey: 'present', color: colors.success },
+    { key: 'absent', label: 'ABSENT', valueKey: 'absent', color: colors.priorityHigh },
+  ];
+}
 
 function MonthlySummaryCards({ workDays = 22, present = 18, absent = 1 }) {
+  const { colors } = useTheme();
   const values = { workDays, present, absent };
+  const cardConfig = getCardConfig(colors);
 
   return (
     <View style={styles.row}>
-      {CARD_CONFIG.map(({ key, label, valueKey, color }) => (
-        <View key={key} style={styles.card}>
-          <Text style={styles.label}>{label}</Text>
+      {cardConfig.map(({ key, label, valueKey, color }) => (
+        <View key={key} style={[styles.card, { backgroundColor: colors.cardBackground }]}>
+          <Text style={[styles.label, { color: colors.textSecondary }]}>{label}</Text>
           <Text style={[styles.value, { color }]}>{String(values[valueKey]).padStart(2, '0')}</Text>
         </View>
       ))}
@@ -31,7 +36,6 @@ const styles = StyleSheet.create({
   },
   card: {
     flex: 1,
-    backgroundColor: colors.background,
     borderRadius: borderRadius.sm,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.sm,
@@ -40,7 +44,6 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 10,
     fontWeight: '600',
-    color: colors.textSecondary,
     letterSpacing: 0.5,
     marginBottom: spacing.xs,
   },

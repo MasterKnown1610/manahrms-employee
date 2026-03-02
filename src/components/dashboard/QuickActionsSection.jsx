@@ -1,12 +1,14 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Image } from 'react-native';
 import Icon from '../Icon/Icon';
-import { colors, spacing } from '../../theme/theme';
+import { spacing } from '../../theme/theme';
+import { useTheme } from '../../context/ThemeContext';
 import QuickActionButton from './QuickActionButton';
 
 const AI_CHAT_ICON_SIZE = 40;
 
-const DEFAULT_ACTIONS = [
+function buildDefaultActions(colors) {
+  return [
   {
     id: 'checkin',
     icon: <Icon name="fingerprint" size={28} color={colors.primary} />,
@@ -38,17 +40,21 @@ const DEFAULT_ACTIONS = [
     primary: false,
   },
 ];
+}
 
-function QuickActionsSection({ actions = DEFAULT_ACTIONS, onActionPress }) {
+function QuickActionsSection({ actions, onActionPress }) {
+  const { colors } = useTheme();
+  const defaultActions = React.useMemo(() => buildDefaultActions(colors), [colors]);
+  const actionList = actions ?? defaultActions;
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>QUICK ACTIONS</Text>
+      <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>QUICK ACTIONS</Text>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.actionsRow}
       >
-        {actions.map((action) => (
+        {actionList.map((action) => (
           <QuickActionButton
             key={action.id}
             icon={action.icon}
@@ -70,7 +76,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     letterSpacing: 0.8,
-    color: colors.textSecondary,
     marginBottom: spacing.md,
     paddingHorizontal: spacing.lg,
   },

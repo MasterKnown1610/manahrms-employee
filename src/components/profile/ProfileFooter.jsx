@@ -1,10 +1,12 @@
 import React from 'react';
 import { Text, StyleSheet } from 'react-native';
-import { colors, spacing } from '../../theme/theme';
+import { spacing } from '../../theme/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 function ProfileFooter({ version = '2.4.0', build = '80' }) {
+  const { colors } = useTheme();
   return (
-    <Text style={styles.footer}>
+    <Text style={[styles.footer, { color: colors.textSecondary }]}>
       App version {version} (Build {build})
     </Text>
   );
@@ -13,7 +15,6 @@ function ProfileFooter({ version = '2.4.0', build = '80' }) {
 const styles = StyleSheet.create({
   footer: {
     fontSize: 12,
-    color: colors.textSecondary,
     textAlign: 'center',
     paddingVertical: spacing.xl,
   },

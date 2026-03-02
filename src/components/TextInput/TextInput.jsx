@@ -1,13 +1,7 @@
 import React from 'react';
 import { View, Text, TextInput as RNTextInput, StyleSheet } from 'react-native';
-import {
-  colors,
-  spacing,
-  typography,
-  borderRadius,
-  inputHeight,
-  iconSize,
-} from '../../theme/theme';
+import { spacing, typography, borderRadius, inputHeight, iconSize } from '../../theme/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 function TextInput({
   label,
@@ -22,21 +16,18 @@ function TextInput({
   inputStyle,
   ...rest
 }) {
+  const { colors } = useTheme();
   return (
     <View style={[styles.wrapper, style]}>
       {label ? (
-        <Text style={styles.label}>{label.toUpperCase()}</Text>
+        <Text style={[styles.label, { color: colors.textSecondary }]}>{label.toUpperCase()}</Text>
       ) : null}
-      <View style={styles.inputContainer}>
+      <View style={[styles.inputContainer, { backgroundColor: colors.backgroundInput, borderColor: colors.border }]}>
         {leftIcon ? (
           <View style={styles.leftIcon}>{leftIcon}</View>
         ) : null}
         <RNTextInput
-          style={[
-            styles.input,
-            leftIcon ? styles.inputWithLeftIcon : null,
-            inputStyle,
-          ]}
+          style={[styles.input, leftIcon ? styles.inputWithLeftIcon : null, { color: colors.text }, inputStyle]}
           placeholder={placeholder}
           placeholderTextColor={colors.placeholder}
           value={value}
@@ -63,10 +54,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     height: inputHeight,
-    backgroundColor: colors.backgroundInput,
     borderRadius: borderRadius.md,
     borderWidth: 1,
-    borderColor: colors.border,
     paddingHorizontal: spacing.md,
   },
   input: {

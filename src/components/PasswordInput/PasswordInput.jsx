@@ -8,13 +8,13 @@ import {
 } from 'react-native';
 import Icon from '../Icon/Icon';
 import {
-  colors,
   spacing,
   typography,
   borderRadius,
   inputHeight,
   iconSize,
 } from '../../theme/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 function PasswordInput({
   label = 'PASSWORD',
@@ -24,6 +24,7 @@ function PasswordInput({
   leftIcon,
   ...rest
 }) {
+  const { colors } = useTheme();
   const [secureTextEntry, setSecureTextEntry] = useState(true);
 
   const defaultLeftIcon = leftIcon ?? <Icon name="lock" />;
@@ -31,12 +32,12 @@ function PasswordInput({
   return (
     <View style={styles.wrapper}>
       {label ? (
-        <Text style={styles.label}>{label.toUpperCase()}</Text>
+        <Text style={[styles.label, { color: colors.textSecondary }]}>{label.toUpperCase()}</Text>
       ) : null}
-      <View style={styles.inputContainer}>
+      <View style={[styles.inputContainer, { backgroundColor: colors.backgroundInput, borderColor: colors.border }]}>
         <View style={styles.leftIcon}>{defaultLeftIcon}</View>
         <RNTextInput
-          style={styles.input}
+          style={[styles.input, { color: colors.text }]}
           placeholder={placeholder}
           placeholderTextColor={colors.placeholder}
           value={value}
@@ -73,10 +74,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     height: inputHeight,
-    backgroundColor: colors.backgroundInput,
     borderRadius: borderRadius.md,
     borderWidth: 1,
-    borderColor: colors.border,
     paddingHorizontal: spacing.md,
   },
   input: {

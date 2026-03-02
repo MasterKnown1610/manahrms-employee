@@ -2,7 +2,8 @@ import React, { createContext, useCallback, useContext, useMemo, useRef, useStat
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from '../Icon/Icon';
-import { borderRadius, colors, spacing } from '../../theme/theme';
+import { borderRadius, spacing } from '../../theme/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 const ToastContext = createContext({
   showToast: () => {},
@@ -12,15 +13,18 @@ export function useToast() {
   return useContext(ToastContext);
 }
 
-const TYPE_META = {
-  success: { icon: 'check-circle', accent: colors.success, title: 'Success' },
-  error: { icon: 'error-outline', accent: colors.error, title: 'Error' },
-  warning: { icon: 'warning-amber', accent: '#FF8F00', title: 'Warning' },
-  info: { icon: 'info-outline', accent: colors.primary, title: 'Info' },
-};
+function getTypeMeta(colors) {
+  return {
+    success: { icon: 'check-circle', accent: colors.success, title: 'Success' },
+    error: { icon: 'error-outline', accent: colors.error, title: 'Error' },
+    warning: { icon: 'warning-amber', accent: '#FF8F00', title: 'Warning' },
+    info: { icon: 'info-outline', accent: colors.primary, title: 'Info' },
+  };
+}
 
-function ToastView({ toast, onClose, topOffset }) {
-  const meta = TYPE_META[toast.type] ?? TYPE_META.info;
+function ToastView({ toast, onClose, topOffset, colors }) {
+  const typeMeta = getTypeMeta(colors);
+  const meta = typeMeta[toast.type] ?? typeMeta.info;
 
   return (
     <Animated.View
@@ -34,7 +38,7 @@ function ToastView({ toast, onClose, topOffset }) {
         },
       ]}
     >
-      <View style={styles.card}>
+      <View style={[styles.card, { backgroundColor: colors.cardBackground }]}>
         <View style={[styles.accent, { backgroundColor: meta.accent }]} />
         <View style={styles.content}>
           <View style={styles.row}>
@@ -42,10 +46,10 @@ function ToastView({ toast, onClose, topOffset }) {
               <Icon name={meta.icon} size={22} color={meta.accent} />
             </View>
             <View style={styles.textWrap}>
-              <Text numberOfLines={1} style={styles.title}>
+              <Text numberOfLines={1} style={[styles.title, { color: colors.text }]}>
                 {toast.title || meta.title}
               </Text>
-              <Text style={styles.message}>{toast.message}</Text>
+              <Text style={[styles.message, { color: colors.textSecondary }]}>{toast.message}</Text>
             </View>
             <Pressable onPress={onClose} hitSlop={12} style={styles.closeBtn}>
               <Icon name="close" size={18} color={colors.textSecondary} />
@@ -58,6 +62,7 @@ function ToastView({ toast, onClose, topOffset }) {
 }
 
 export function ToastProvider({ children }) {
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const timerRef = useRef(null);
   const [toast, setToast] = useState(null);
@@ -103,7 +108,7 @@ export function ToastProvider({ children }) {
       <View style={styles.root}>
         {children}
         {toast ? (
-          <ToastView toast={toast} onClose={hide} topOffset={insets.top + spacing.md} />
+          <ToastView toast={toast} onClose={hide} topOffset={insets.top + spacing.md} colors={colors} />
         ) : null}
       </View>
     </ToastContext.Provider>
@@ -122,7 +127,6 @@ const styles = StyleSheet.create({
   },
   card: {
     overflow: 'hidden',
-    backgroundColor: colors.surface,
     borderRadius: borderRadius.md,
     shadowColor: '#000',
     shadowOpacity: 0.12,
@@ -159,12 +163,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 14,
     fontWeight: '700',
-    color: colors.text,
     marginBottom: 2,
   },
   message: {
     fontSize: 13,
-    color: colors.textSecondary,
     lineHeight: 18,
   },
   closeBtn: {

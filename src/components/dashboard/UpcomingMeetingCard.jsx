@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Icon from '../Icon/Icon';
-import { colors, spacing, borderRadius } from '../../theme/theme';
+import { spacing, borderRadius } from '../../theme/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 function UpcomingMeetingCard({
   title,
@@ -12,14 +13,15 @@ function UpcomingMeetingCard({
   joinLabel = 'Join',
   onJoin,
 }) {
+  const { colors } = useTheme();
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, { backgroundColor: colors.primary }]}>
       <View style={styles.topRow}>
-        <Text style={styles.title} numberOfLines={1}>
+        <Text style={[styles.title, { color: colors.background }]} numberOfLines={1}>
           {title}
         </Text>
         <View style={styles.todayBadge}>
-          <Text style={styles.todayText}>TODAY</Text>
+          <Text style={[styles.todayText, { color: colors.background }]}>TODAY</Text>
         </View>
       </View>
       <Text style={styles.location} numberOfLines={1}>
@@ -27,7 +29,7 @@ function UpcomingMeetingCard({
       </Text>
       <View style={styles.timeRow}>
         <Icon name="schedule" size={16} color={colors.background} />
-        <Text style={styles.timeText}>
+        <Text style={[styles.timeText, { color: colors.background }]}>
           {time}
           {timeLabel ? ` (${timeLabel})` : ''}
         </Text>
@@ -39,12 +41,12 @@ function UpcomingMeetingCard({
           <View style={[styles.avatar, styles.avatarOverlap]} />
           {attendeesCount > 0 ? (
             <View style={[styles.avatar, styles.avatarMore]}>
-              <Text style={styles.avatarMoreText}>+{attendeesCount}</Text>
+              <Text style={[styles.avatarMoreText, { color: colors.background }]}>+{attendeesCount}</Text>
             </View>
           ) : null}
         </View>
-        <Pressable onPress={onJoin} style={styles.joinButton}>
-          <Text style={styles.joinText}>{joinLabel}</Text>
+        <Pressable onPress={onJoin} style={[styles.joinButton, { backgroundColor: colors.background }]}>
+          <Text style={[styles.joinText, { color: colors.primary }]}>{joinLabel}</Text>
         </Pressable>
       </View>
     </View>
@@ -53,7 +55,6 @@ function UpcomingMeetingCard({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.primary,
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
   },
@@ -66,7 +67,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '700',
-    color: colors.background,
     flex: 1,
     marginRight: spacing.sm,
   },
@@ -79,7 +79,6 @@ const styles = StyleSheet.create({
   todayText: {
     fontSize: 11,
     fontWeight: '600',
-    color: colors.background,
   },
   location: {
     fontSize: 13,
@@ -93,7 +92,6 @@ const styles = StyleSheet.create({
   },
   timeText: {
     fontSize: 13,
-    color: colors.background,
     marginLeft: spacing.sm,
   },
   bottomRow: {
@@ -122,10 +120,8 @@ const styles = StyleSheet.create({
   avatarMoreText: {
     fontSize: 10,
     fontWeight: '600',
-    color: colors.background,
   },
   joinButton: {
-    backgroundColor: colors.background,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.md,
@@ -133,7 +129,6 @@ const styles = StyleSheet.create({
   joinText: {
     fontSize: 14,
     fontWeight: '700',
-    color: colors.primary,
   },
 });
 

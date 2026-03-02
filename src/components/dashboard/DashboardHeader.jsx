@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, Image } from 'react-native';
 import Icon from '../Icon/Icon';
-import { colors, spacing, typography } from '../../theme/theme';
+import { spacing } from '../../theme/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 function DashboardHeader({
   userName = 'User',
@@ -9,8 +10,9 @@ function DashboardHeader({
   profileImageUri,
   onMenuPress,
 }) {
+  const { colors } = useTheme();
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.primary }]}>
       <Pressable onPress={onMenuPress} style={styles.iconButton} hitSlop={8}>
         <Icon name="menu" size={24} color={colors.background} />
       </Pressable>
@@ -25,7 +27,7 @@ function DashboardHeader({
             )}
           </View>
           <View style={styles.greetingBlock}>
-            <Text style={styles.hello}>Hello, {userName}</Text>
+            <Text style={[styles.hello, { color: colors.background }]}>Hello, {userName}</Text>
             <Text style={styles.subGreetingLight}>{greeting}</Text>
           </View>
         </View>
@@ -38,13 +40,11 @@ function DashboardHeader({
 
 const styles = StyleSheet.create({
   container: {
-  
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.lg,
-    backgroundColor: colors.primary,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
   },
@@ -85,12 +85,10 @@ const styles = StyleSheet.create({
   hello: {
     fontSize: 20,
     fontWeight: '700',
-    color: colors.background,
     letterSpacing: 0.2,
   },
   subGreeting: {
     fontSize: 13,
-    color: colors.textSecondary,
     marginTop: 2,
   },
   subGreetingLight: {

@@ -2,7 +2,8 @@ import React from 'react';
 import { View, Text, StyleSheet, Pressable, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from '../Icon/Icon';
-import { colors, spacing } from '../../theme/theme';
+import { spacing } from '../../theme/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 const TABS = [
   { key: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
@@ -13,11 +14,12 @@ const TABS = [
 ];
 
 function BottomTabBar({ activeTab = 'dashboard', onTabPress }) {
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const bottomPadding = Math.max(insets.bottom, spacing.sm);
 
   return (
-    <View style={[styles.container, { paddingBottom: bottomPadding }]}>
+    <View style={[styles.container, { paddingBottom: bottomPadding, backgroundColor: colors.background }]}>
       <View style={styles.bar}>
         {TABS.map((tab) => {
           const isActive = activeTab === tab.key;
@@ -36,7 +38,8 @@ function BottomTabBar({ activeTab = 'dashboard', onTabPress }) {
               <Text
                 style={[
                   styles.tabLabel,
-                  isActive && styles.tabLabelActive,
+                  { color: colors.textSecondary },
+                  isActive && [styles.tabLabelActive, { color: colors.primary }],
                 ]}
               >
                 {tab.label}
@@ -51,7 +54,6 @@ function BottomTabBar({ activeTab = 'dashboard', onTabPress }) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.cardBackground,
     paddingTop: spacing.sm,
     ...Platform.select({
       ios: {
@@ -79,12 +81,10 @@ const styles = StyleSheet.create({
   },
   tabLabel: {
     fontSize: 11,
-    color: colors.textSecondary,
     marginTop: 4,
     fontWeight: '500',
   },
   tabLabelActive: {
-    color: colors.primary,
     fontWeight: '600',
   },
 });

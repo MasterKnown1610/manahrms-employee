@@ -75,10 +75,13 @@ export const AIChatState = () => {
     dispatch({ type: AIChatActions.CLEAR_MESSAGES });
   };
 
+  const reset = () => dispatch({ type: AIChatActions.RESET });
+
   return {
     ...state,
     ask,
     clearMessages,
+    reset,
   };
 };
 

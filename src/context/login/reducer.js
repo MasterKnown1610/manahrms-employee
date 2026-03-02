@@ -13,9 +13,10 @@ const loginHandlers = {
     ...state,
     profile: action.payload,
   }),
+  RESET: () => initialState,
 }
 
-const  Reducer = (state, action) => {
+const Reducer = (state, action) => {
   const handler= loginHandlers[action.type];
   return handler ? handler(state, action) : state;
 };

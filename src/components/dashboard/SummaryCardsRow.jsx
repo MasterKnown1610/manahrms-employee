@@ -2,7 +2,8 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import SummaryCard from './SummaryCard';
 import Icon from '../Icon/Icon';
-import { colors, spacing } from '../../theme/theme';
+import { spacing } from '../../theme/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 const CARD_CONFIG = [
   { id: 'my-tasks', icon: 'assignment', color: '#7B1FA2', label: 'My Tasks', valueKeys: ['myTasks', 'my_tasks', 'totalTasks'] },
@@ -59,6 +60,13 @@ function getLeaveBalanceValue(dashboard) {
   return null;
 }
 
+function getTodaysStatusValue(dashboard) {
+  const source = dashboard?.summary ?? dashboard ?? {};
+  const todayStatus = source.today_status ?? source.todays_status ?? source.todayStatus;
+  if (!todayStatus || typeof todayStatus !== 'object') return null;
+  return todayStatus.is_present === true ? 'Present' : 'Absent';
+}
+
 function buildAdminCardsFromDashboard(dashboard) {
   const overview = dashboard?.overview ?? {};
   return ADMIN_CARD_CONFIG.map((config) => {
@@ -73,7 +81,7 @@ function buildAdminCardsFromDashboard(dashboard) {
   });
 }
 
-function buildCardsFromDashboard(dashboard) {
+function buildCardsFromDashboard(dashboard, colors) {
   if (isAdminDashboard(dashboard)) {
     return buildAdminCardsFromDashboard(dashboard);
   }
@@ -81,14 +89,26 @@ function buildCardsFromDashboard(dashboard) {
     let value = null;
     if (config.id === 'leave-balance') {
       value = getLeaveBalanceValue(dashboard);
+    } else if (config.id === 'todays-status') {
+      value = getTodaysStatusValue(dashboard);
     } else {
       value = getValueFromDashboard(dashboard, config.valueKeys);
     }
+    const displayValue = value ?? DEFAULT_VALUES[config.id];
+    const isTodaysStatus = config.id === 'todays-status';
+    const valueStyle = isTodaysStatus && colors
+      ? {
+          fontSize: 14,
+          fontWeight: '700',
+          color: displayValue === 'Present' ? colors.success : displayValue === 'Absent' ? colors.error : colors.textSecondary,
+        }
+      : undefined;
     return {
       id: config.id,
       icon: <Icon name={config.icon} size={28} color={config.color} />,
       label: config.label,
-      value: value ?? DEFAULT_VALUES[config.id],
+      value: displayValue,
+      valueStyle,
     };
   });
 }
@@ -96,7 +116,8 @@ function buildCardsFromDashboard(dashboard) {
 const COLS = 3;
 
 function SummaryCardsRow({ cards: cardsProp, dashboard, onCardPress }) {
-  const cards = dashboard != null ? buildCardsFromDashboard(dashboard) : (cardsProp ?? buildCardsFromDashboard(null));
+  const { colors } = useTheme();
+  const cards = dashboard != null ? buildCardsFromDashboard(dashboard, colors) : (cardsProp ?? buildCardsFromDashboard(null, colors));
   return (
     <View style={styles.container}>
       <View style={styles.grid}>
@@ -106,6 +127,7 @@ function SummaryCardsRow({ cards: cardsProp, dashboard, onCardPress }) {
               icon={card.icon}
               label={card.label}
               value={card.value}
+              valueStyle={card.valueStyle}
               onPress={onCardPress ? () => onCardPress(card.id) : undefined}
               style={styles.cardInGrid}
             />
@@ -130,11 +152,14 @@ const styles = StyleSheet.create({
     width: `${100 / COLS}%`,
     paddingHorizontal: spacing.xs,
     paddingVertical: spacing.xs,
+    height: 120,
+    overflow: 'hidden',
   },
   cardInGrid: {
     width: '100%',
+    height: '100%',
     marginRight: 0,
-    minHeight: 90,
+    minHeight: 0,
   },
 });
 

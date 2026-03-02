@@ -1,4 +1,4 @@
-import { useReducer } from 'react';
+import { useReducer, useCallback } from 'react';
 import { API_URLS } from '../../services/config';
 import Reducer from './reducer';
 import { AttendanceActions} from './action';
@@ -201,6 +201,8 @@ export const AttendenceState = () => {
     }
   };
 
+  const reset = useCallback(() => dispatch({ type: AttendanceActions.RESET }), []);
+
   return {
     ...state,
     lastPunchIn: state.punchIn,
@@ -211,6 +213,7 @@ export const AttendenceState = () => {
     fetchCalendar,
     fetchPresentAttendance,
     fetchAttendanceStats,
+    reset,
   };
 };
 

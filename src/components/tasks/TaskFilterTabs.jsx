@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
-import { colors, spacing, borderRadius } from '../../theme/theme';
+import { Text, StyleSheet, Pressable, ScrollView } from 'react-native';
+import { spacing, borderRadius } from '../../theme/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 const TABS = [
   { key: 'all', label: 'All' },
@@ -10,6 +11,7 @@ const TABS = [
 ];
 
 function TaskFilterTabs({ activeTab = 'all', onTabPress }) {
+  const { colors } = useTheme();
   return (
     <ScrollView
       horizontal
@@ -23,9 +25,13 @@ function TaskFilterTabs({ activeTab = 'all', onTabPress }) {
           <Pressable
             key={tab.key}
             onPress={() => onTabPress?.(tab.key)}
-            style={[styles.tab, isActive && styles.tabActive]}
+            style={[
+              styles.tab,
+              { backgroundColor: colors.cardBackground, borderColor: colors.border },
+              isActive && { backgroundColor: colors.primary, borderColor: colors.primary },
+            ]}
           >
-            <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>
+            <Text style={[styles.tabLabel, { color: colors.text }, isActive && { color: colors.background }]}>
               {tab.label}
             </Text>
           </Pressable>
@@ -48,21 +54,11 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm + 2,
     paddingHorizontal: spacing.md,
     borderRadius: borderRadius.sm,
-    backgroundColor: colors.background,
     borderWidth: 1,
-    borderColor: colors.border,
-  },
-  tabActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
   },
   tabLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.text,
-  },
-  tabLabelActive: {
-    color: colors.background,
   },
 });
 

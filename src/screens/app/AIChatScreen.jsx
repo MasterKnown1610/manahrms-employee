@@ -14,13 +14,11 @@ import {
   StatusBar,
 } from 'react-native';
 import { Loader } from '../../components';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from '../../components/Icon/Icon';
-import { colors, spacing, borderRadius } from '../../theme/theme';
+import { spacing, borderRadius } from '../../theme/theme';
 import Context from '../../context/Context';
-
-const CHAT_THEME_STORAGE_KEY = '@manahrms_chat_theme';
+import { useTheme } from '../../context/ThemeContext';
 
 const CHAT_THEME_LIGHT = {
   background: '#FFFFFF',
@@ -33,7 +31,6 @@ const CHAT_THEME_LIGHT = {
   bubbleUser: '#E8E0F4',
   bubbleAssistant: '#F5F5F5',
   avatarBg: '#E8E0F4',
-  accent: colors.primary,
 };
 
 const CHAT_THEME_DARK = {
@@ -47,32 +44,17 @@ const CHAT_THEME_DARK = {
   bubbleUser: '#3A3A3A',
   bubbleAssistant: '#2D2D2D',
   avatarBg: '#3A3A3A',
-  accent: '#B39DDB',
 };
-
-const DEFAULT_PROMPTS_LIGHT = [
-  { id: 'leave-balance', label: 'My leave balance', icon: 'event', color: colors.success },
-  { id: 'apply-leave', label: 'Apply for leave', icon: 'event-available', color: colors.primary },
-  { id: 'attendance-help', label: 'Attendance help', icon: 'fingerprint', color: colors.priorityMedium },
-  { id: 'hr-policies', label: 'HR policies', icon: 'description', color: colors.textSecondary },
-];
-
-const DEFAULT_PROMPTS_DARK = [
-  { id: 'leave-balance', label: 'My leave balance', icon: 'event', color: '#81C784' },
-  { id: 'apply-leave', label: 'Apply for leave', icon: 'event-available', color: '#64B5F6' },
-  { id: 'attendance-help', label: 'Attendance help', icon: 'fingerprint', color: '#FFB74D' },
-  { id: 'hr-policies', label: 'HR policies', icon: 'description', color: '#B0B0B0' },
-];
 
 const EMPTY_LOGO_SIZE = 96;
 const LOADER_AVATAR_SIZE = 32;
 
 function AIChatScreen({ navigation }) {
   const insets = useSafeAreaInsets();
+  const { colors, isDark, toggleTheme } = useTheme();
   const { aiChat } = useContext(Context);
   const { messages, loading, ask, clearMessages } = aiChat;
   const [inputText, setInputText] = useState('');
-  const [chatTheme, setChatTheme] = useState('light');
   const listRef = useRef(null);
   const spinValue = useRef(new Animated.Value(0)).current;
   const headerLogoSpin = useRef(new Animated.Value(0)).current;
@@ -118,30 +100,23 @@ function AIChatScreen({ navigation }) {
     outputRange: ['0deg', '360deg'],
   });
 
-  useEffect(() => {
-    const loadTheme = async () => {
-      try {
-        const saved = await AsyncStorage.getItem(CHAT_THEME_STORAGE_KEY);
-        if (saved === 'light' || saved === 'dark') setChatTheme(saved);
-      } catch {
-        // keep default 'light'
-      }
-    };
-    loadTheme();
-  }, []);
-
-  const toggleChatTheme = async () => {
-    const next = chatTheme === 'light' ? 'dark' : 'light';
-    setChatTheme(next);
-    try {
-      await AsyncStorage.setItem(CHAT_THEME_STORAGE_KEY, next);
-    } catch {
-      // ignore
-    }
-  };
-
-  const theme = chatTheme === 'dark' ? CHAT_THEME_DARK : CHAT_THEME_LIGHT;
-  const defaultPrompts = chatTheme === 'dark' ? DEFAULT_PROMPTS_DARK : DEFAULT_PROMPTS_LIGHT;
+  // Use app theme: light/dark from ThemeContext (no separate chat theme storage)
+  const theme = useMemo(
+    () => ({
+      ...(isDark ? CHAT_THEME_DARK : CHAT_THEME_LIGHT),
+      accent: colors.primary,
+    }),
+    [isDark, colors.primary]
+  );
+  const defaultPrompts = useMemo(
+    () => [
+      { id: 'leave-balance', label: 'My leave balance', icon: 'event', color: colors.success },
+      { id: 'apply-leave', label: 'Apply for leave', icon: 'event-available', color: colors.primary },
+      { id: 'attendance-help', label: 'Attendance help', icon: 'fingerprint', color: colors.priorityMedium },
+      { id: 'hr-policies', label: 'HR policies', icon: 'description', color: colors.textSecondary },
+    ],
+    [colors.success, colors.primary, colors.priorityMedium, colors.textSecondary]
+  );
   const chatStyles = useMemo(() => createChatStyles(theme), [theme]);
 
   useEffect(() => {
@@ -268,7 +243,7 @@ function AIChatScreen({ navigation }) {
 
   const showEmptyState = messages.length === 0;
 
-  const statusBarBg = chatTheme === 'light' ? colors.primary : theme.background;
+  const statusBarBg = isDark ? theme.background : colors.primary;
 
   return (
     <View style={chatStyles.safeArea}>
@@ -295,9 +270,9 @@ function AIChatScreen({ navigation }) {
             </View>
           </View>
           <View style={chatStyles.headerRight}>
-            <Pressable onPress={toggleChatTheme} style={chatStyles.themeToggle} hitSlop={8}>
+            <Pressable onPress={toggleTheme} style={chatStyles.themeToggle} hitSlop={8}>
               <Icon
-                name={chatTheme === 'light' ? 'dark-mode' : 'light-mode'}
+                name={isDark ? 'light-mode' : 'dark-mode'}
                 size={22}
                 color={theme.text}
               />

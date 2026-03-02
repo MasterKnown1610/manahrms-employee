@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Icon from '../Icon/Icon';
-import { colors, spacing, borderRadius } from '../../theme/theme';
+import { spacing, borderRadius } from '../../theme/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 const DAYS_HEADER = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'];
 
@@ -12,6 +13,7 @@ function AttendanceCalendar({
   onSelectDate,
   onMonthChange, // (year: number, month: number) => void, month 1-based
 }) {
+  const { colors } = useTheme();
   const [currentMonth, setCurrentMonth] = useState(() => {
     const d = selectedDate ? new Date(selectedDate) : new Date();
     return new Date(d.getFullYear(), d.getMonth(), 1);
@@ -92,19 +94,19 @@ function AttendanceCalendar({
   };
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, { backgroundColor: colors.cardBackground }]}>
       <View style={styles.monthRow}>
         <Pressable onPress={goPrev} style={styles.arrow} hitSlop={8}>
           <Icon name="chevron-left" size={24} color={colors.primary} />
         </Pressable>
-        <Text style={styles.monthLabel}>{monthLabel}</Text>
+        <Text style={[styles.monthLabel, { color: colors.text }]}>{monthLabel}</Text>
         <Pressable onPress={goNext} style={styles.arrow} hitSlop={8}>
           <Icon name="chevron-right" size={24} color={colors.primary} />
         </Pressable>
       </View>
       <View style={styles.weekRow}>
         {DAYS_HEADER.map((d) => (
-          <Text key={d} style={styles.weekDay}>{d}</Text>
+          <Text key={d} style={[styles.weekDay, { color: colors.textSecondary }]}>{d}</Text>
         ))}
       </View>
       <View style={styles.grid}>
@@ -119,16 +121,17 @@ function AttendanceCalendar({
               style={[
                 styles.cell,
                 styles.cellDay,
-                item.isSelected && styles.cellSelected,
+                item.isSelected && { backgroundColor: colors.primaryLight, borderRadius: borderRadius.sm },
               ]}
             >
               <Text
                 style={[
                   styles.cellDayText,
-                  item.isSelected && styles.cellDayTextSelected,
-                  item.isPresent && styles.cellDayTextPresent,
-                  item.isAbsent && styles.cellDayTextAbsent,
-                  item.isFuture && styles.cellDayTextFuture,
+                  { color: colors.text },
+                  item.isSelected && { color: colors.primary, fontWeight: '700' },
+                  item.isPresent && { color: colors.success },
+                  item.isAbsent && { color: colors.error },
+                  item.isFuture && { color: colors.textSecondary },
                 ]}
               >
                 {item.day}
@@ -137,10 +140,10 @@ function AttendanceCalendar({
                 <View
                   style={[
                     styles.dot,
-                    item.isSelected && styles.dotSelected,
-                    item.isPresent && styles.dotGreen,
-                    item.isAbsent && styles.dotRed,
-                    item.isFuture && styles.dotFuture,
+                    item.isSelected && { backgroundColor: colors.primary },
+                    item.isPresent && { backgroundColor: colors.success },
+                    item.isAbsent && { backgroundColor: colors.error },
+                    item.isFuture && { backgroundColor: colors.textSecondary },
                   ]}
                 />
               )}
@@ -154,7 +157,6 @@ function AttendanceCalendar({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.background,
     borderRadius: borderRadius.md,
     padding: spacing.md,
     marginBottom: spacing.lg,
@@ -171,7 +173,6 @@ const styles = StyleSheet.create({
   monthLabel: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.text,
   },
   weekRow: {
     flexDirection: 'row',
@@ -181,7 +182,6 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 11,
     fontWeight: '600',
-    color: colors.textSecondary,
     textAlign: 'center',
   },
   grid: {
@@ -197,45 +197,15 @@ const styles = StyleSheet.create({
   cellDay: {
     paddingVertical: 4,
   },
-  cellSelected: {
-    backgroundColor: colors.primaryLight,
-    borderRadius: borderRadius.sm,
-  },
   cellDayText: {
     fontSize: 14,
     fontWeight: '500',
-    color: colors.text,
-  },
-  cellDayTextSelected: {
-    color: colors.primary,
-    fontWeight: '700',
-  },
-  cellDayTextPresent: {
-    color: colors.success,
-  },
-  cellDayTextAbsent: {
-    color: colors.error,
-  },
-  cellDayTextFuture: {
-    color: colors.textSecondary,
   },
   dot: {
     width: 4,
     height: 4,
     borderRadius: 2,
     marginTop: 2,
-  },
-  dotGreen: {
-    backgroundColor: colors.success,
-  },
-  dotRed: {
-    backgroundColor: colors.error,
-  },
-  dotFuture: {
-    backgroundColor: colors.textSecondary,
-  },
-  dotSelected: {
-    backgroundColor: colors.primary,
   },
 });
 

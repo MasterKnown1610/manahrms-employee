@@ -10,13 +10,16 @@ import {
 } from 'react-native';
 import Icon from '../Icon/Icon';
 import Loader from '../Loader/Loader';
-import { colors, spacing, borderRadius } from '../../theme/theme';
+import { spacing, borderRadius } from '../../theme/theme';
+import { useTheme } from '../../context/ThemeContext';
 
-const STATUS_OPTIONS = [
-  { label: 'Open', value: 'open', color: colors.textSecondary },
-  { label: 'In Progress', value: 'in_progress', color: colors.primary },
-  { label: 'Closed', value: 'closed', color: colors.success },
-];
+function getStatusOptions(colors) {
+  return [
+    { label: 'Open', value: 'open', color: colors.textSecondary },
+    { label: 'In Progress', value: 'in_progress', color: colors.primary },
+    { label: 'Closed', value: 'closed', color: colors.success },
+  ];
+}
 
 function formatDueDate(dateStr) {
   if (!dateStr) return '—';
@@ -41,12 +44,13 @@ function getStatusValue(status) {
   return 'open';
 }
 
-function getStatusColor(statusValue) {
-  const opt = STATUS_OPTIONS.find((o) => o.value === statusValue);
+function getStatusColor(statusValue, colors) {
+  const opts = getStatusOptions(colors);
+  const opt = opts.find((o) => o.value === statusValue);
   return opt?.color ?? colors.textSecondary;
 }
 
-function getPriorityColor(priority) {
+function getPriorityColor(priority, colors) {
   const p = String(priority || '').toLowerCase();
   if (p === 'high') return colors.priorityHigh;
   if (p === 'medium') return colors.priorityMedium;
@@ -54,7 +58,9 @@ function getPriorityColor(priority) {
 }
 
 function TaskDetailsModal({ visible, onClose, task, loading, error, statusUpdating, onUpdateStatus }) {
+  const { colors } = useTheme();
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
+  const statusOptions = getStatusOptions(colors);
 
   useEffect(() => {
     if (!visible) setStatusDropdownOpen(false);
@@ -74,7 +80,7 @@ function TaskDetailsModal({ visible, onClose, task, loading, error, statusUpdati
   const priority = raw?.priority != null ? String(raw.priority) : '—';
   const statusLabel = formatStatus(raw?.status);
   const statusValue = getStatusValue(raw?.status);
-  const statusColor = getStatusColor(statusValue);
+  const statusColor = getStatusColor(statusValue, colors);
   const dueDate = formatDueDate(raw?.due_date ?? raw?.dueDate);
   const taskTitle = raw?.title ?? 'Untitled task';
   const taskDescription = raw?.description ?? '';
@@ -96,14 +102,14 @@ function TaskDetailsModal({ visible, onClose, task, loading, error, statusUpdati
       onRequestClose={onClose}
     >
       <Pressable style={styles.overlay} onPress={onClose}>
-        <Pressable style={styles.dialog} onPress={(e) => e.stopPropagation()}>
-          <View style={styles.headerAccent} />
+        <Pressable style={[styles.dialog, { backgroundColor: colors.background }]} onPress={(e) => e.stopPropagation()}>
+          <View style={[styles.headerAccent, { backgroundColor: colors.primary }]} />
           <View style={styles.header}>
-            <Text style={styles.title}>Task Details</Text>
+            <Text style={[styles.title, { color: colors.text }]}>Task Details</Text>
             <Pressable
               onPress={onClose}
               hitSlop={12}
-              style={({ pressed }) => [styles.closeBtn, pressed && styles.closeBtnPressed]}
+              style={({ pressed }) => [styles.closeBtn, { backgroundColor: colors.backgroundInput }, pressed && { backgroundColor: colors.border }]}
             >
               <Icon name="close" size={22} color={colors.text} />
             </Pressable>
@@ -116,9 +122,9 @@ function TaskDetailsModal({ visible, onClose, task, loading, error, statusUpdati
             </View>
           ) : error ? (
             <View style={styles.centered}>
-              <View style={styles.errorCard}>
+              <View style={[styles.errorCard, { backgroundColor: colors.backgroundInput }]}>
                 <Icon name="error-outline" size={32} color={colors.error} />
-                <Text style={styles.errorText}>{error}</Text>
+                <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
               </View>
             </View>
           ) : raw ? (
@@ -127,30 +133,30 @@ function TaskDetailsModal({ visible, onClose, task, loading, error, statusUpdati
               style={styles.scroll}
               contentContainerStyle={styles.body}
             >
-              <View style={styles.hero}>
-                <Text style={styles.taskTitle} numberOfLines={3}>{taskTitle}</Text>
+              <View style={[styles.hero, { backgroundColor: colors.primaryLight }]}>
+                <Text style={[styles.taskTitle, { color: colors.text }]} numberOfLines={3}>{taskTitle}</Text>
                 <View style={styles.priorityBadgeWrap}>
-                  <View style={[styles.priorityBadge, { backgroundColor: getPriorityColor(priority) }]}>
-                    <Text style={styles.priorityBadgeText}>{priority}</Text>
+                  <View style={[styles.priorityBadge, { backgroundColor: getPriorityColor(priority, colors) }]}>
+                    <Text style={[styles.priorityBadgeText, { color: colors.background }]}>{priority}</Text>
                   </View>
                 </View>
               </View>
 
               {taskDescription ? (
-                <View style={styles.descriptionSection}>
-                  <Text style={styles.sectionLabel}>Description</Text>
-                  <Text style={styles.descriptionText}>{taskDescription}</Text>
+<View style={styles.descriptionSection}>
+                <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Description</Text>
+                  <Text style={[styles.descriptionText, { color: colors.text }]}>{taskDescription}</Text>
                 </View>
               ) : null}
 
               <View style={styles.section}>
-                <Text style={styles.sectionLabel}>Update status</Text>
+                <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Update status</Text>
                 <View style={styles.statusControlWrap}>
                   <Pressable
                     style={[
                       styles.statusSelect,
+                      { backgroundColor: colors.cardBackground, borderColor: statusColor },
                       statusUpdating && styles.statusSelectDisabled,
-                      { borderColor: statusColor },
                     ]}
                     onPress={() => !statusUpdating && setStatusDropdownOpen((v) => !v)}
                     disabled={statusUpdating}
@@ -166,15 +172,15 @@ function TaskDetailsModal({ visible, onClose, task, loading, error, statusUpdati
                     )}
                   </Pressable>
                   {statusDropdownOpen && (
-                    <View style={styles.statusDropdown}>
-                      {STATUS_OPTIONS.map((opt) => (
+                    <View style={[styles.statusDropdown, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+                      {statusOptions.map((opt) => (
                         <Pressable
                           key={opt.value}
-                          style={[styles.statusOption, opt.value === statusValue && styles.statusOptionActive]}
+                          style={[styles.statusOption, opt.value === statusValue && { backgroundColor: colors.primaryLight }]}
                           onPress={() => handleSelectStatus(opt)}
                         >
                           <View style={[styles.statusOptionDot, { backgroundColor: opt.color }]} />
-                          <Text style={[styles.statusOptionText, opt.value === statusValue && styles.statusOptionTextActive]}>
+                          <Text style={[styles.statusOptionText, { color: colors.text }, opt.value === statusValue && { color: colors.primary, fontWeight: '700' }]}>
                             {opt.label}
                           </Text>
                           {opt.value === statusValue && (
@@ -187,46 +193,46 @@ function TaskDetailsModal({ visible, onClose, task, loading, error, statusUpdati
                 </View>
               </View>
 
-              <View style={styles.detailsCard}>
-                <Text style={styles.detailsCardTitle}>Details</Text>
+              <View style={[styles.detailsCard, { backgroundColor: colors.backgroundInput, borderColor: colors.border }]}>
+                <Text style={[styles.detailsCardTitle, { color: colors.textSecondary }]}>Details</Text>
 
-                <View style={styles.detailRow}>
-                  <View style={styles.detailIconWrap}>
+                <View style={[styles.detailRow, { borderBottomColor: colors.border }]}>
+                  <View style={[styles.detailIconWrap, { backgroundColor: colors.background }]}>
                     <Icon name="person" size={18} color={colors.primary} />
                   </View>
                   <View style={styles.detailContent}>
-                    <Text style={styles.detailLabel}>Assignment</Text>
-                    <Text style={styles.detailValue}>{assignee}</Text>
+                    <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Assignment</Text>
+                    <Text style={[styles.detailValue, { color: colors.text }]}>{assignee}</Text>
                   </View>
                 </View>
 
-                <View style={styles.detailRow}>
-                  <View style={styles.detailIconWrap}>
+                <View style={[styles.detailRow, { borderBottomColor: colors.border }]}>
+                  <View style={[styles.detailIconWrap, { backgroundColor: colors.background }]}>
                     <Icon name="business" size={18} color={colors.primary} />
                   </View>
                   <View style={styles.detailContent}>
-                    <Text style={styles.detailLabel}>Project</Text>
-                    <Text style={styles.detailValue}>
+                    <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Project</Text>
+                    <Text style={[styles.detailValue, { color: colors.text }]}>
                       {projectName}
                       {projectClient ? ` · ${projectClient}` : ''}
                     </Text>
                   </View>
                 </View>
 
-                <View style={[styles.detailRow, styles.detailRowLast]}>
-                  <View style={styles.detailIconWrap}>
+                <View style={[styles.detailRow, styles.detailRowLast, { borderBottomColor: colors.border }]}>
+                  <View style={[styles.detailIconWrap, { backgroundColor: colors.background }]}>
                     <Icon name="event" size={18} color={colors.primary} />
                   </View>
                   <View style={styles.detailContent}>
-                    <Text style={styles.detailLabel}>Due date</Text>
-                    <Text style={styles.detailValue}>{dueDate}</Text>
+                    <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Due date</Text>
+                    <Text style={[styles.detailValue, { color: colors.text }]}>{dueDate}</Text>
                   </View>
                 </View>
               </View>
             </ScrollView>
           ) : (
             <View style={styles.centered}>
-              <Text style={styles.emptyText}>No task data</Text>
+              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No task data</Text>
             </View>
           )}
           </View>
@@ -250,7 +256,6 @@ const styles = StyleSheet.create({
     maxWidth: 400,
     height: '88%',
     maxHeight: '88%',
-    backgroundColor: colors.background,
     borderRadius: 20,
     overflow: 'hidden',
     ...Platform.select({
@@ -265,7 +270,6 @@ const styles = StyleSheet.create({
   },
   headerAccent: {
     height: 4,
-    backgroundColor: colors.primary,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
   },
@@ -280,19 +284,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: '700',
-    color: colors.text,
     letterSpacing: -0.3,
   },
   closeBtn: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.backgroundInput,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  closeBtnPressed: {
-    backgroundColor: colors.border,
   },
   contentWrap: {
     flex: 1,
@@ -313,23 +312,19 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 14,
-    color: colors.textSecondary,
   },
   errorCard: {
     alignItems: 'center',
     padding: spacing.xl,
-    backgroundColor: colors.backgroundInput,
     borderRadius: borderRadius.md,
     marginHorizontal: spacing.lg,
   },
   errorText: {
-    color: colors.error,
     textAlign: 'center',
     marginTop: spacing.sm,
     fontSize: 14,
   },
   hero: {
-    backgroundColor: colors.primaryLight,
     borderRadius: borderRadius.md,
     padding: spacing.lg,
     marginBottom: spacing.lg,
@@ -337,7 +332,6 @@ const styles = StyleSheet.create({
   taskTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: colors.text,
     lineHeight: 24,
     marginBottom: spacing.sm,
   },
@@ -352,7 +346,6 @@ const styles = StyleSheet.create({
   priorityBadgeText: {
     fontSize: 12,
     fontWeight: '700',
-    color: colors.background,
     textTransform: 'capitalize',
   },
   descriptionSection: {
@@ -360,7 +353,6 @@ const styles = StyleSheet.create({
   },
   descriptionText: {
     fontSize: 15,
-    color: colors.text,
     lineHeight: 22,
   },
   section: {
@@ -369,7 +361,6 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 12,
     fontWeight: '600',
-    color: colors.textSecondary,
     letterSpacing: 0.3,
     marginBottom: spacing.sm,
   },
@@ -380,7 +371,6 @@ const styles = StyleSheet.create({
   statusSelect: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.background,
     borderWidth: 2,
     borderRadius: borderRadius.md,
     paddingVertical: spacing.md,
@@ -407,10 +397,8 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     marginTop: 6,
-    backgroundColor: colors.background,
     borderRadius: borderRadius.md,
     borderWidth: 1,
-    borderColor: colors.border,
     overflow: 'hidden',
     ...Platform.select({
       ios: {
@@ -428,9 +416,6 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.md,
   },
-  statusOptionActive: {
-    backgroundColor: colors.primaryLight,
-  },
   statusOptionDot: {
     width: 8,
     height: 8,
@@ -440,23 +425,15 @@ const styles = StyleSheet.create({
   statusOptionText: {
     flex: 1,
     fontSize: 15,
-    color: colors.text,
-  },
-  statusOptionTextActive: {
-    color: colors.primary,
-    fontWeight: '700',
   },
   detailsCard: {
-    backgroundColor: colors.backgroundInput,
     borderRadius: borderRadius.md,
     padding: spacing.lg,
     borderWidth: 1,
-    borderColor: colors.border,
   },
   detailsCardTitle: {
     fontSize: 13,
     fontWeight: '700',
-    color: colors.textSecondary,
     letterSpacing: 0.5,
     marginBottom: spacing.md,
   },
@@ -465,7 +442,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   detailRowLast: {
     borderBottomWidth: 0,
@@ -474,7 +450,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.background,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: spacing.md,
@@ -485,13 +460,11 @@ const styles = StyleSheet.create({
   detailLabel: {
     fontSize: 11,
     fontWeight: '600',
-    color: colors.textSecondary,
     marginBottom: 2,
   },
   detailValue: {
     fontSize: 15,
     fontWeight: '600',
-    color: colors.text,
   },
 });
 

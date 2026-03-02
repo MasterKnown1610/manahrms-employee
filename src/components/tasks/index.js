@@ -3,5 +3,6 @@ export { default as SearchFilterBar } from './SearchFilterBar';
 export { default as TaskFilterTabs } from './TaskFilterTabs';
 export { default as TaskCard } from './TaskCard';
 export { default as TaskDetailsModal } from './TaskDetailsModal';
+export { default as ProjectFilterModal } from './ProjectFilterModal';
 export { default as TasksBottomTabBar } from './TasksBottomTabBar';
 export { default as TasksFAB } from './TasksFAB';
