@@ -5,11 +5,11 @@ import {
   StyleSheet,
   Modal,
   Pressable,
-  ActivityIndicator,
   ScrollView,
   Platform,
 } from 'react-native';
 import Icon from '../Icon/Icon';
+import Loader from '../Loader/Loader';
 import { colors, spacing, borderRadius } from '../../theme/theme';
 
 const STATUS_OPTIONS = [
@@ -62,15 +62,22 @@ function TaskDetailsModal({ visible, onClose, task, loading, error, statusUpdati
 
   if (!visible) return null;
 
-  const raw = task && typeof task === 'object' ? task : null;
+  // Support both raw task and API wrapper { data: task }
+  const raw =
+    task && typeof task === 'object'
+      ? (task.data && typeof task.data === 'object' ? task.data : task)
+      : null;
+
   const assignee = raw?.assigned_to_employee?.full_name ?? raw?.assignedBy ?? '—';
   const projectName = raw?.project?.name ?? raw?.projectName ?? '—';
+  const projectClient = raw?.project?.client;
   const priority = raw?.priority != null ? String(raw.priority) : '—';
   const statusLabel = formatStatus(raw?.status);
   const statusValue = getStatusValue(raw?.status);
   const statusColor = getStatusColor(statusValue);
   const dueDate = formatDueDate(raw?.due_date ?? raw?.dueDate);
   const taskTitle = raw?.title ?? 'Untitled task';
+  const taskDescription = raw?.description ?? '';
   const taskId = raw?.id;
 
   const handleSelectStatus = (option) => {
@@ -79,6 +86,7 @@ function TaskDetailsModal({ visible, onClose, task, loading, error, statusUpdati
       onUpdateStatus(taskId, option.value);
     }
   };
+
 
   return (
     <Modal
@@ -101,9 +109,10 @@ function TaskDetailsModal({ visible, onClose, task, loading, error, statusUpdati
             </Pressable>
           </View>
 
+          <View style={styles.contentWrap}>
           {loading ? (
             <View style={styles.centered}>
-              <ActivityIndicator size="large" color={colors.primary} />
+              <Loader size="large" />
             </View>
           ) : error ? (
             <View style={styles.centered}>
@@ -127,6 +136,13 @@ function TaskDetailsModal({ visible, onClose, task, loading, error, statusUpdati
                 </View>
               </View>
 
+              {taskDescription ? (
+                <View style={styles.descriptionSection}>
+                  <Text style={styles.sectionLabel}>Description</Text>
+                  <Text style={styles.descriptionText}>{taskDescription}</Text>
+                </View>
+              ) : null}
+
               <View style={styles.section}>
                 <Text style={styles.sectionLabel}>Update status</Text>
                 <View style={styles.statusControlWrap}>
@@ -140,7 +156,7 @@ function TaskDetailsModal({ visible, onClose, task, loading, error, statusUpdati
                     disabled={statusUpdating}
                   >
                     {statusUpdating ? (
-                      <ActivityIndicator size="small" color={colors.primary} />
+                      <Loader size="small" />
                     ) : (
                       <>
                         <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
@@ -190,7 +206,10 @@ function TaskDetailsModal({ visible, onClose, task, loading, error, statusUpdati
                   </View>
                   <View style={styles.detailContent}>
                     <Text style={styles.detailLabel}>Project</Text>
-                    <Text style={styles.detailValue}>{projectName}</Text>
+                    <Text style={styles.detailValue}>
+                      {projectName}
+                      {projectClient ? ` · ${projectClient}` : ''}
+                    </Text>
                   </View>
                 </View>
 
@@ -210,6 +229,8 @@ function TaskDetailsModal({ visible, onClose, task, loading, error, statusUpdati
               <Text style={styles.emptyText}>No task data</Text>
             </View>
           )}
+          </View>
+
         </Pressable>
       </Pressable>
     </Modal>
@@ -227,6 +248,7 @@ const styles = StyleSheet.create({
   dialog: {
     width: '100%',
     maxWidth: 400,
+    height: '88%',
     maxHeight: '88%',
     backgroundColor: colors.background,
     borderRadius: 20,
@@ -272,6 +294,10 @@ const styles = StyleSheet.create({
   closeBtnPressed: {
     backgroundColor: colors.border,
   },
+  contentWrap: {
+    flex: 1,
+    minHeight: 200,
+  },
   scroll: {
     flex: 1,
   },
@@ -280,6 +306,7 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xl,
   },
   centered: {
+    flex: 1,
     minHeight: 160,
     justifyContent: 'center',
     alignItems: 'center',
@@ -327,6 +354,14 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.background,
     textTransform: 'capitalize',
+  },
+  descriptionSection: {
+    marginBottom: spacing.lg,
+  },
+  descriptionText: {
+    fontSize: 15,
+    color: colors.text,
+    lineHeight: 22,
   },
   section: {
     marginBottom: spacing.lg,

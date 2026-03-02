@@ -30,7 +30,7 @@ function getTimeBasedGreeting() {
 function DashboardScreen({ navigation }) {
   const [activeTab, setActiveTab] = useState('dashboard');
   const { dashboard: dashboardContext, login: loginContext } = useContext(Context);
-  const { dashboard, dashboardAdminOverview, getDashboard, getdashboardadminoverview } = dashboardContext ?? {};
+  const { dashboard, dashboardAdminOverview, loading: dashboardLoading, getDashboard, getdashboardadminoverview } = dashboardContext ?? {};
   const { getProfile, profile } = loginContext ?? {};
   const role = getRoleFromContext(loginContext ?? {});
 
@@ -84,12 +84,13 @@ function DashboardScreen({ navigation }) {
   const handleQuickActionPress = (actionId) => {
     if (actionId === 'checkin') {
       navigation.navigate('Attendance');
+    } else if (actionId === 'leave') {
+      navigation.navigate('Leave');
     } else if (actionId === 'projects') {
-      navigation.navigate('Main', { screen: 'Dashboard' }); // TODO: add Projects screen when available
+      navigation.navigate('Main', { screen: 'Projects' });
     } else if (actionId === 'aichat') {
       navigation.navigate('AIChat');
     }
-    // Add other action handlers as needed (leave, payslip)
   };
 
   return (
@@ -115,6 +116,7 @@ function DashboardScreen({ navigation }) {
         <View style={styles.content}>
           <TodaysTasksSection
             tasks={dashboardData?.recent_tasks ?? []}
+            loading={dashboardLoading}
             onViewAll={handleViewAllTasks}
             onTaskPress={handleTaskPress}
             onTaskCheck={handleTaskCheck}

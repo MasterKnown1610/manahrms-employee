@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Icon from '../Icon/Icon';
+import Loader from '../Loader/Loader';
 import { colors, spacing, borderRadius } from '../../theme/theme';
 
 function AttendanceStatusCard({
@@ -43,7 +44,7 @@ function AttendanceStatusCard({
               disabled={checkInLoading}
             >
               {checkInLoading ? (
-                <ActivityIndicator color={colors.background} size="small" />
+                <Loader size="small" />
               ) : (
                 <>
                   <Icon name="schedule" size={20} color={colors.background} />
@@ -67,7 +68,7 @@ function AttendanceStatusCard({
               disabled={checkOutLoading}
             >
               {checkOutLoading ? (
-                <ActivityIndicator color={colors.background} size="small" />
+                <Loader size="small" />
               ) : (
                 <>
                   <Icon name="schedule" size={20} color={colors.background} />

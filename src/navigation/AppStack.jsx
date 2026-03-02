@@ -6,6 +6,7 @@ import AttendanceScreen from '../screens/app/AttendanceScreen';
 import TasksScreen from '../screens/app/TasksScreen';
 import LeaveScreen from '../screens/app/LeaveScreen';
 import AIChatScreen from '../screens/app/AIChatScreen';
+import ProjectsScreen from '../screens/app/ProjectsScreen';
 import { colors } from '../theme/theme';
 
 const Stack = createNativeStackNavigator();
@@ -53,6 +54,11 @@ function AppStack() {
       <Stack.Screen
         name="AIChat"
         component={AIChatScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Projects"
+        component={ProjectsScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>

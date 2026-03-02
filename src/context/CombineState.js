@@ -4,6 +4,7 @@ import DashboardState from './Dashboard/state';
 import AttendenceState from './Attendence/state';
 import TaskState from './Task/state';
 import LeaveState from './Leave/state';
+import ProjectsState from './Projects/state';
 import AIChatState from './AIChat/state';
 
 export const useCombinedState = () => {
@@ -12,6 +13,7 @@ export const useCombinedState = () => {
   const attendence = AttendenceState();
   const task = TaskState();
   const leave = LeaveState();
+  const projects = ProjectsState();
   const aiChat = AIChatState();
   return useMemo(() => ({
     login,
@@ -19,8 +21,9 @@ export const useCombinedState = () => {
     attendence,
     task,
     leave,
+    projects,
     aiChat,
-  }), [login, dashboard, attendence, task, leave, aiChat]);
+  }), [login, dashboard, attendence, task, leave, projects, aiChat]);
 };
 
 

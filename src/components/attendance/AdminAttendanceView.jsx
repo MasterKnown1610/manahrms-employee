@@ -4,10 +4,10 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  ActivityIndicator,
   RefreshControl,
 } from 'react-native';
 import Icon from '../Icon/Icon';
+import Loader from '../Loader/Loader';
 import { colors, spacing, borderRadius } from '../../theme/theme';
 
 function formatTime(value) {
@@ -145,7 +145,7 @@ function AdminAttendanceView({
 
         {loading && employees.length === 0 ? (
           <View style={styles.loadingWrap}>
-            <ActivityIndicator size="large" color={colors.primary} />
+            <Loader size="large" />
           </View>
         ) : employees.length === 0 ? (
           <View style={styles.emptyWrap}>

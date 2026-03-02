@@ -36,10 +36,18 @@ export function AuthProvider({ children }) {
         const stored = await AsyncStorage.getItem(AUTH_STORAGE_KEY);
         if (stored) {
           const parsed = JSON.parse(stored);
-          const savedToken = parsed?.token ?? parsed?.authData?.token ?? parsed?.authData?.accessToken ?? parsed?.authData?.access_token;
-          if (savedToken) {
-            setTokenState(savedToken);
-            setIsAuthenticated(true);
+          const authData = parsed?.authData ?? {};
+          const role = authData?.user?.role ?? authData?.role ?? 'employee';
+          if (role === 'admin') {
+            AsyncStorage.removeItem(AUTH_STORAGE_KEY);
+            setTokenState(null);
+            setIsAuthenticated(false);
+          } else {
+            const savedToken = parsed?.token ?? authData?.token ?? authData?.accessToken ?? authData?.access_token;
+            if (savedToken) {
+              setTokenState(savedToken);
+              setIsAuthenticated(true);
+            }
           }
         }
       } catch {

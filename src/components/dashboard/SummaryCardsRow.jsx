@@ -1,5 +1,5 @@
 import React from 'react';
-import { ScrollView, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import SummaryCard from './SummaryCard';
 import Icon from '../Icon/Icon';
 import { colors, spacing } from '../../theme/theme';
@@ -8,7 +8,6 @@ const CARD_CONFIG = [
   { id: 'my-tasks', icon: 'assignment', color: '#7B1FA2', label: 'My Tasks', valueKeys: ['myTasks', 'my_tasks', 'totalTasks'] },
   { id: 'todays-status', icon: 'schedule', color: '#4CAF50', label: "Today's Status", valueKeys: ['todayStatus', 'todays_status', 'attendanceStatus', 'checkInStatus'] },
   { id: 'leave-balance', icon: 'event', color: '#2196F3', label: 'Leave Balance', valueKeys: ['leaveBalance', 'leave_balance'] },
-  { id: 'my-projects', icon: 'work', color: '#FF9800', label: 'My Projects', valueKeys: ['myProjects', 'my_projects', 'projectCount'] },
   { id: 'open-tasks', icon: 'more-horiz', color: '#FF9800', label: 'Open Tasks', valueKeys: ['openTasks', 'open_tasks'] },
   { id: 'in-progress', icon: 'schedule', color: '#2196F3', label: 'In Progress', valueKeys: ['inProgress', 'in_progress'] },
   { id: 'completed', icon: 'check-circle', color: '#4CAF50', label: 'Completed', valueKeys: ['completed'] },
@@ -32,7 +31,6 @@ const DEFAULT_VALUES = {
   'my-tasks': '0',
   'todays-status': '—',
   'leave-balance': '0 days',
-  'my-projects': '0',
   'open-tasks': '0',
   'in-progress': '0',
   'completed': '0',
@@ -61,14 +59,6 @@ function getLeaveBalanceValue(dashboard) {
   return null;
 }
 
-function getMyProjectsCount(dashboard) {
-  const source = dashboard?.summary ?? dashboard ?? {};
-  const myProjects = source.my_projects ?? source.myProjects;
-  if (Array.isArray(myProjects)) return String(myProjects.length);
-  if (source.projectCount != null) return String(source.projectCount);
-  return null;
-}
-
 function buildAdminCardsFromDashboard(dashboard) {
   const overview = dashboard?.overview ?? {};
   return ADMIN_CARD_CONFIG.map((config) => {
@@ -91,8 +81,6 @@ function buildCardsFromDashboard(dashboard) {
     let value = null;
     if (config.id === 'leave-balance') {
       value = getLeaveBalanceValue(dashboard);
-    } else if (config.id === 'my-projects') {
-      value = getMyProjectsCount(dashboard);
     } else {
       value = getValueFromDashboard(dashboard, config.valueKeys);
     }
@@ -105,32 +93,48 @@ function buildCardsFromDashboard(dashboard) {
   });
 }
 
+const COLS = 3;
+
 function SummaryCardsRow({ cards: cardsProp, dashboard, onCardPress }) {
   const cards = dashboard != null ? buildCardsFromDashboard(dashboard) : (cardsProp ?? buildCardsFromDashboard(null));
   return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={styles.container}
-    >
-      {cards.map((card) => (
-        <SummaryCard
-          key={card.id}
-          icon={card.icon}
-          label={card.label}
-          value={card.value}
-          onPress={onCardPress ? () => onCardPress(card.id) : undefined}
-        />
-      ))}
-    </ScrollView>
+    <View style={styles.container}>
+      <View style={styles.grid}>
+        {cards.map((card) => (
+          <View key={card.id} style={styles.gridItem}>
+            <SummaryCard
+              icon={card.icon}
+              label={card.label}
+              value={card.value}
+              onPress={onCardPress ? () => onCardPress(card.id) : undefined}
+              style={styles.cardInGrid}
+            />
+          </View>
+        ))}
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: 8,
-    paddingLeft: spacing.lg,
-    paddingRight: spacing.lg,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+  },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginHorizontal: -spacing.xs,
+  },
+  gridItem: {
+    width: `${100 / COLS}%`,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing.xs,
+  },
+  cardInGrid: {
+    width: '100%',
+    marginRight: 0,
+    minHeight: 90,
   },
 });
 

@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useContext, useCallback } from 'react';
-import { View, ScrollView, StyleSheet, ActivityIndicator, Text } from 'react-native';
+import { View, ScrollView, StyleSheet, Text } from 'react-native';
+import { Loader } from '../../components';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import {
@@ -29,9 +30,12 @@ function TasksScreen({ navigation }) {
       statusUpdating,
     } = {},
   } = useContext(Context);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('all');
   const [detailsTaskId, setDetailsTaskId] = useState(null);
+
+
 
   const tabToApiStatus = {
     pending: 'open',
@@ -65,10 +69,14 @@ function TasksScreen({ navigation }) {
     let list = [...taskList];
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
+      const assignee = (t) => t.assigned_to_employee?.full_name ?? t.assignedBy ?? '';
+      const projectName = (t) => t.project?.name ?? '';
       list = list.filter(
         (t) =>
           (t.title && t.title.toLowerCase().includes(q)) ||
-          (t.assignedBy && t.assignedBy.toLowerCase().includes(q))
+          (t.description && t.description.toLowerCase().includes(q)) ||
+          assignee(t).toLowerCase().includes(q) ||
+          projectName(t).toLowerCase().includes(q)
       );
     }
     return list;
@@ -106,28 +114,28 @@ function TasksScreen({ navigation }) {
   const handleAddTask = () => {};
 
   return (
-          <>
-    <SafeAreaView style={styles.safeArea} edges={["top"]}/>
-      
-          <TasksHeader onBackPress={handleBack} onNotificationPress={handleNotification} />
-      
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      >
-        
+    <>
+      <SafeAreaView style={styles.safeArea} edges={['top']} />
+      <TasksHeader onBackPress={handleBack} onNotificationPress={handleNotification} />
+
+      <View style={styles.fixedTop}>
         <SearchFilterBar
           value={searchQuery}
           onChangeText={setSearchQuery}
           onFilterPress={handleFilter}
         />
         <TaskFilterTabs activeTab={activeTab} onTabPress={handleTabPress} />
+      </View>
 
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
         {loading ? (
           <View style={styles.centered}>
-            <ActivityIndicator size="large" color={colors.primary} />
+            <Loader size="large" />
           </View>
         ) : error ? (
           <View style={styles.centered}>
@@ -139,12 +147,12 @@ function TasksScreen({ navigation }) {
               <TaskCard
                 key={task.id}
                 title={task.title}
+                description={task.description}
                 priority={task.priority}
+                projectName={task.project?.name}
                 status={task.status}
-                progress={task.progress}
-                assignedBy={task.assignedBy}
-                dueDate={task.dueDate}
-                completedOn={task.completedOn}
+                created_at={task.created_at}
+                due_date={task.due_date}
                 onViewDetails={() => handleViewDetails(task)}
                 onStart={() => handleStart(task)}
               />
@@ -152,8 +160,6 @@ function TasksScreen({ navigation }) {
           </View>
         )}
       </ScrollView>
-
-      <TasksFAB onPress={handleAddTask} />
 
       <TaskDetailsModal
         visible={detailsTaskId != null}
@@ -164,14 +170,18 @@ function TasksScreen({ navigation }) {
         statusUpdating={statusUpdating}
         onUpdateStatus={handleUpdateStatus}
       />
-          </>
-
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { 
+  safeArea: {
     backgroundColor: colors.primary,
+  },
+  fixedTop: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.sm,
+    // backgroundColor: colors.background,
   },
   scroll: {
     flex: 1,
@@ -179,15 +189,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.xxl + 80,
-  },
-  headerWrap: {
-    backgroundColor: colors.primary,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    marginHorizontal: -spacing.lg,
-    marginBottom: 0,
-    paddingBottom: spacing.xs,
-    overflow: 'hidden',
   },
   list: {
     marginBottom: spacing.xl,

@@ -11,7 +11,7 @@ function LeaveHeader({ onBackPress, onNotificationPress }) {
       </Pressable>
       <Text style={styles.title}>Leave</Text>
       <Pressable onPress={onNotificationPress} style={styles.iconButton} hitSlop={8}>
-        <Icon name="notifications" size={24} color={colors.background} />
+        {/* <Icon name="notifications" size={24} color={colors.background} /> */}
       </Pressable>
     </View>
   );

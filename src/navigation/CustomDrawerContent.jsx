@@ -63,14 +63,14 @@ function CustomDrawerContent(props) {
   const activeScreen = nestedState?.routes?.[nestedState.index]?.name ?? 'Dashboard';
   const activeBottomTab = activeScreen === 'Profile' ? 'Profile' : 'Home';
 
-  const mainScreens = ['Dashboard', 'Profile', 'Attendance', 'Tasks', 'Leaves', 'AIChat'];
+  const mainScreens = ['Dashboard', 'Profile', 'Attendance', 'Tasks', 'Leaves', 'AIChat', 'Projects'];
   const navigateTo = (screenKey) => {
     navigation.closeDrawer();
     if (mainScreens.includes(screenKey)) {
       const screenName = screenKey === 'Leaves' ? 'Leave' : screenKey;
       navigation.navigate('Main', { screen: screenName });
     } else {
-      // Employee, Departments, Projects, Settings - go to Dashboard for now if no dedicated screen
+      // Employee, Departments, Settings - go to Dashboard for now if no dedicated screen
       navigation.navigate('Main', { screen: 'Dashboard' });
     }
   };
@@ -103,7 +103,7 @@ function CustomDrawerContent(props) {
         showsVerticalScrollIndicator={false}
       >
         {/* Logo & Brand */}
-        <View style={styles.brandRow}>
+        {/* <View style={styles.brandRow}>
           <View style={styles.logoBox}>
             <Image
               source={require('../assets/logo.png')}
@@ -112,12 +112,16 @@ function CustomDrawerContent(props) {
             />
           </View>
           <Text style={styles.brandName}>ManaHRMS</Text>
-        </View>
+        </View> */}
 
         {/* User Card */}
         <View style={styles.userCard}>
           <View style={styles.avatar}>
-            <Icon name="person" size={28} color={colors.textSecondary} />
+            <Image
+              source={require('../assets/logo.png')}
+              style={styles.avatarLogo}
+              resizeMode="contain"
+            />
           </View>
           <View style={styles.userInfo}>
             <Text style={styles.userName}>{userName}</Text>
@@ -215,10 +219,15 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#FFE0B2',
+    backgroundColor: 'transparent',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: spacing.md,
+    overflow: 'hidden',
+  },
+  avatarLogo: {
+    width: 40,
+    height: 40,
   },
   userInfo: {
     flex: 1,

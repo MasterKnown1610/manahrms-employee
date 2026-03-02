@@ -1,11 +1,6 @@
 import React from 'react';
-import {
-  Pressable,
-  Text,
-  View,
-  StyleSheet,
-  ActivityIndicator,
-} from 'react-native';
+import { Pressable, Text, View, StyleSheet } from 'react-native';
+import Loader from '../Loader/Loader';
 import {
   colors,
   spacing,
@@ -41,10 +36,7 @@ function Button({
       {...rest}
     >
       {loading ? (
-        <ActivityIndicator
-          color={isPrimary ? colors.background : colors.primary}
-          size="small"
-        />
+        <Loader size="small" />
       ) : (
         <View style={styles.content}>
           {leftIcon ? <View style={styles.leftIcon}>{leftIcon}</View> : null}

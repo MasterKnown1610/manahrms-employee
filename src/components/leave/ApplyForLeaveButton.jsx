@@ -1,6 +1,7 @@
 import React from 'react';
-import { ActivityIndicator, Pressable, Text, StyleSheet } from 'react-native';
+import { Pressable, Text, StyleSheet } from 'react-native';
 import Icon from '../Icon/Icon';
+import Loader from '../Loader/Loader';
 import { colors, spacing, borderRadius } from '../../theme/theme';
 
 function ApplyForLeaveButton({ onPress, loading = false, disabled = false }) {
@@ -12,7 +13,7 @@ function ApplyForLeaveButton({ onPress, loading = false, disabled = false }) {
       style={[styles.button, isDisabled && styles.buttonDisabled]}
     >
       {loading ? (
-        <ActivityIndicator size="small" color={colors.background} />
+        <Loader size="small" />
       ) : (
         <Icon name="add" size={22} color={colors.background} />
       )}

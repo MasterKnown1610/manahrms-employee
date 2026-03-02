@@ -1,0 +1,5 @@
+export const ProjectActions = {
+  SET_LOADING: 'SET_LOADING',
+  SET_ERROR: 'SET_ERROR',
+  SET_PROJECTS_QUERY: 'SET_PROJECTS_QUERY',
+};

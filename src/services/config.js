@@ -7,6 +7,7 @@ export const API_URLS = {
     Attendance: `${BASE_URL}/attendance`,
     Task: `${BASE_URL}/tasks`,
     Leave: `${BASE_URL}/leaves`,
+    Projects: `${BASE_URL}/projects`,
     AIChat: `${BASE_URL}/ai-chat`,
 }
 

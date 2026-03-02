@@ -7,6 +7,7 @@ import {
   Pressable,
   Image,
   Platform,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -43,7 +44,13 @@ function LoginScreen({ navigation }) {
       console.log('response', response);
       const isSuccess = response?.status === 200;
       if (isSuccess) {
-        const msg = response?.data?.message || 'Login successful';
+        const data = response?.data ?? {};
+        const role = data?.user?.role ?? data?.role ?? 'employee';
+        if (role === 'admin') {
+          setMessage({ text: 'There is no access for admin.', type: 'error' });
+          return;
+        }
+        const msg = data?.message || 'Login successful';
         setMessage({ text: msg, type: 'success' });
         setAuthenticated(response?.data);
       } else {
@@ -66,12 +73,17 @@ function LoginScreen({ navigation }) {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom', 'left', 'right']}>
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoid}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
-        <View style={styles.card}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.card}>
         {/* Header */}
         <View style={styles.logoCircle}>
           <Image
@@ -129,9 +141,9 @@ function LoginScreen({ navigation }) {
             </View>
             <Text style={styles.rememberText}>Remember Me</Text>
           </Pressable>
-          <Pressable onPress={handleForgotPassword} hitSlop={8}>
+          {/* <Pressable onPress={handleForgotPassword} hitSlop={8}>
             <Text style={styles.forgotText}>Forgot Password?</Text>
-          </Pressable>
+          </Pressable> */}
         </View>
 
         {/* Login Button */}
@@ -161,8 +173,9 @@ function LoginScreen({ navigation }) {
         {/* Footer */}
         <Text style={styles.poweredBy}>Powered by ManaHRMS</Text>
         <Text style={styles.version}>V1.0.0 • ENTERPRISE CLOUD</Text>
-        </View>
-      </ScrollView>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -171,6 +184,9 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: '#E8E6EB',
+  },
+  keyboardAvoid: {
+    flex: 1,
   },
   scrollContent: {
     flexGrow: 1,

@@ -2,11 +2,11 @@ import React from 'react';
 import { View, Text, StyleSheet, Pressable, Platform } from 'react-native';
 import { colors, spacing, borderRadius } from '../../theme/theme';
 
-function SummaryCard({ icon, label, value, onPress }) {
+function SummaryCard({ icon, label, value, onPress, style }) {
   const Wrapper = onPress ? Pressable : View;
 
   return (
-    <Wrapper onPress={onPress} style={styles.card}>
+    <Wrapper onPress={onPress} style={[styles.card, style]}>
       <View style={styles.iconWrap}>{icon}</View>
       <Text style={styles.label}>{label}</Text>
       <Text style={styles.value}>{value}</Text>

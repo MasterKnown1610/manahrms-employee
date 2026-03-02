@@ -1,5 +1,5 @@
 import React, { useState, useContext, useCallback, useRef } from 'react';
-import { ScrollView, StyleSheet } from 'react-native';
+import { View, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import {
@@ -9,6 +9,7 @@ import {
   AttendanceCalendar,
   AdminAttendanceView,
 } from '../../components/attendance';
+import { Loader } from '../../components';
 import { colors, spacing } from '../../theme/theme';
 import Context from '../../context/Context';
 
@@ -200,47 +201,53 @@ function AttendanceScreen({ navigation }) {
     <>
       <SafeAreaView style={styles.safeArea} edges={['top']} />
       <AttendanceHeader onBackPress={handleBack} onAddPress={handleAdd} />
-      {isAdmin ? (
-        <AdminAttendanceView
-          attendanceStats={attendanceStats}
-          presentAttendance={presentAttendance}
-          loading={loading}
-          error={error}
-          onRefresh={handleAdminRefresh}
-          dateLabel={formatDateLabel(new Date())}
-        />
-      ) : (
-        <ScrollView
-          style={styles.scroll}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          <AttendanceStatusCard
+      <View style={styles.contentWrap}>
+        {loading ? (
+          <View style={styles.centered}>
+            <Loader size="large" />
+          </View>
+        ) : isAdmin ? (
+          <AdminAttendanceView
+            attendanceStats={attendanceStats}
+            presentAttendance={presentAttendance}
+            loading={loading}
+            error={error}
+            onRefresh={handleAdminRefresh}
             dateLabel={formatDateLabel(new Date())}
-            onCheckIn={handleCheckIn}
-            onCheckOut={handleCheckOut}
-            isCheckedIn={isCheckedIn}
+          />
+        ) : (
+          <ScrollView
+            style={styles.scroll}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            <AttendanceStatusCard
+              dateLabel={formatDateLabel(new Date())}
+              onCheckIn={handleCheckIn}
+              onCheckOut={handleCheckOut}
+              isCheckedIn={isCheckedIn}
             checkInLoading={loading}
             checkOutLoading={loading}
-            checkInError={error}
-            punchInTime={punchInTime}
-            punchOutTime={punchOutTime}
-            alreadyCheckedOut={alreadyCheckedOut}
-          />
-          <MonthlySummaryCards
-            workDays={calendarAttendance?.workDays ?? 0}
-            present={calendarAttendance?.present ?? 0}
-            absent={calendarAttendance?.absent ?? 0}
-          />
-          <AttendanceCalendar
-            markedDates={markedDates}
-            absentDates={absentDates}
-            selectedDate={selectedDate}
-            onSelectDate={setSelectedDate}
-            onMonthChange={handleCalendarMonthChange}
-          />
-        </ScrollView>
-      )}
+              checkInError={error}
+              punchInTime={punchInTime}
+              punchOutTime={punchOutTime}
+              alreadyCheckedOut={alreadyCheckedOut}
+            />
+            <MonthlySummaryCards
+              workDays={calendarAttendance?.workDays ?? 0}
+              present={calendarAttendance?.present ?? 0}
+              absent={calendarAttendance?.absent ?? 0}
+            />
+            <AttendanceCalendar
+              markedDates={markedDates}
+              absentDates={absentDates}
+              selectedDate={selectedDate}
+              onSelectDate={setSelectedDate}
+              onMonthChange={handleCalendarMonthChange}
+            />
+          </ScrollView>
+        )}
+      </View>
     </>
   );
 }
@@ -248,6 +255,14 @@ function AttendanceScreen({ navigation }) {
 const styles = StyleSheet.create({
   safeArea: {
     backgroundColor: colors.primary,
+  },
+  contentWrap: {
+    flex: 1,
+  },
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   scroll: {
     flex: 1,

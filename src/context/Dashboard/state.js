@@ -8,6 +8,8 @@ import { useAuth } from '../AuthContext';
 export const initialState = {
   dashboard: null,
   dashboardAdminOverview: null,
+  loading: false,
+  error: null,
 };
 
 export const DashboardState = () => {

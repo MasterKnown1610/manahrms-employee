@@ -65,9 +65,11 @@ export const TaskState = () => {
       const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const data = response?.data?.data ?? response?.data;
-      dispatch({ type: TaskActions.SET_TASK_DETAIL, payload: data });
-      return data;
+      const data = response?.data;
+      // API returns { data: { id, title, ... } }; store the inner task for the modal
+      const taskPayload = data?.data ?? data;
+      dispatch({ type: TaskActions.SET_TASK_DETAIL, payload: taskPayload });
+      return taskPayload;
     } catch (err) {
       const message = err?.response?.data?.message ?? err?.message ?? 'Failed to fetch task';
       dispatch({ type: TaskActions.SET_DETAIL_ERROR, payload: message });

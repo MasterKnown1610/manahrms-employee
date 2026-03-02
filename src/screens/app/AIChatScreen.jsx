@@ -7,14 +7,15 @@ import {
   TextInput,
   ScrollView,
   FlatList,
-  KeyboardAvoidingView,
+  Keyboard,
   Platform,
-  ActivityIndicator,
   Image,
   Animated,
+  StatusBar,
 } from 'react-native';
+import { Loader } from '../../components';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from '../../components/Icon/Icon';
 import { colors, spacing, borderRadius } from '../../theme/theme';
 import Context from '../../context/Context';
@@ -67,6 +68,7 @@ const EMPTY_LOGO_SIZE = 96;
 const LOADER_AVATAR_SIZE = 32;
 
 function AIChatScreen({ navigation }) {
+  const insets = useSafeAreaInsets();
   const { aiChat } = useContext(Context);
   const { messages, loading, ask, clearMessages } = aiChat;
   const [inputText, setInputText] = useState('');
@@ -85,6 +87,19 @@ function AIChatScreen({ navigation }) {
   const logoOpacity = useRef(new Animated.Value(1)).current;
   const loaderAvatarRef = useRef(null);
   const logoOverlayRef = useRef(null);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  // Control bottom padding only while keyboard is visible so it resets when keyboard closes
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const subShow = Keyboard.addListener(showEvent, (e) => setKeyboardHeight(e.endCoordinates.height));
+    const subHide = Keyboard.addListener(hideEvent, () => setKeyboardHeight(0));
+    return () => {
+      subShow.remove();
+      subHide.remove();
+    };
+  }, []);
 
   useEffect(() => {
     const rotation = Animated.loop(
@@ -253,19 +268,25 @@ function AIChatScreen({ navigation }) {
 
   const showEmptyState = messages.length === 0;
 
+  const statusBarBg = chatTheme === 'light' ? colors.primary : theme.background;
+
   return (
-    <SafeAreaView style={chatStyles.safeArea} edges={['top', 'bottom']}>
-      <KeyboardAvoidingView
-        style={chatStyles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
-      >
-        {/* Header: back (left) | AI Chat (center) | theme + new chat (right) */}
+    <View style={chatStyles.safeArea}>
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor={statusBarBg}
+      />
+      {insets.top > 0 && (
+        <View style={[chatStyles.statusBarFill, { height: insets.top, backgroundColor: statusBarBg }]} />
+      )}
+      <View style={chatStyles.safeAreaInner}>
+        <View style={[chatStyles.flex, { paddingBottom: keyboardHeight }]}>
+        {/* Header: back + AI Chat (left) | theme + new chat (right) */}
         <View style={chatStyles.header}>
-          <Pressable onPress={handleBackPress} style={chatStyles.headerIcon} hitSlop={8}>
-            <Icon name="arrow-back" size={24} color={theme.text} />
-          </Pressable>
-          <View style={chatStyles.headerCenter}>
+          <View style={chatStyles.headerLeft}>
+            <Pressable onPress={handleBackPress} style={chatStyles.headerIcon} hitSlop={8}>
+              <Icon name="arrow-back" size={24} color={theme.text} />
+            </Pressable>
             <View style={chatStyles.titlePill}>
               <Animated.View style={[chatStyles.headerLogoWrap, { transform: [{ rotate: headerLogoRotation }] }]}>
                 <Image source={require('../../assets/logo.png')} style={chatStyles.headerLogo} resizeMode="contain" />
@@ -367,8 +388,8 @@ function AIChatScreen({ navigation }) {
           </>
         )}
 
-        {/* Input bar: icon inside the input container, safe area applied via SafeAreaView */}
-        <View style={chatStyles.inputRow}>
+        {/* Input bar: minimal bottom inset when keyboard closed */}
+        <View style={[chatStyles.inputRow, { paddingBottom: Math.max(insets.bottom, spacing.sm) }]}>
           <View style={chatStyles.inputContainer}>
             <TextInput
               style={chatStyles.input}
@@ -384,7 +405,7 @@ function AIChatScreen({ navigation }) {
             />
             {loading ? (
               <View style={chatStyles.inputIconInside} pointerEvents="none">
-                <ActivityIndicator size="small" color={theme.accent} />
+                <Loader size="small" />
               </View>
             ) : (
               <Pressable style={chatStyles.inputIconInside} onPress={() => sendMessage(inputText)}>
@@ -393,8 +414,9 @@ function AIChatScreen({ navigation }) {
             )}
           </View>
         </View>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+      </View>
+      </View>
+    </View>
   );
 }
 
@@ -402,6 +424,13 @@ function createChatStyles(theme) {
   return StyleSheet.create({
     flex: { flex: 1 },
     safeArea: {
+      flex: 1,
+      backgroundColor: theme.background,
+    },
+    statusBarFill: {
+      width: '100%',
+    },
+    safeAreaInner: {
       flex: 1,
       backgroundColor: theme.background,
     },
@@ -420,10 +449,11 @@ function createChatStyles(theme) {
       justifyContent: 'center',
       alignItems: 'center',
     },
-    headerCenter: {
-      flex: 1,
-      justifyContent: 'center',
+    headerLeft: {
+      flexDirection: 'row',
       alignItems: 'center',
+      flex: 1,
+      gap: spacing.xs,
     },
     headerRight: {
       flex: 1,

@@ -8,6 +8,7 @@ function SearchFilterBar({
   onChangeText,
   placeholder = 'Search tasks...',
   onFilterPress,
+  isoptionalFilter = false,
 }) {
   return (
     <View style={styles.container}>
@@ -22,9 +23,11 @@ function SearchFilterBar({
           returnKeyType="search"
         />
       </View>
-      <Pressable onPress={onFilterPress} style={styles.filterButton} hitSlop={8}>
-        <Icon name="tune" size={24} color={colors.textSecondary} />
-      </Pressable>
+      {isoptionalFilter && (
+        <Pressable onPress={onFilterPress} style={styles.filterButton} hitSlop={8}>
+          <Icon name="tune" size={24} color={colors.textSecondary} />
+        </Pressable>
+      )}
     </View>
   );
 }
