@@ -4,6 +4,7 @@ import DashboardScreen from '../screens/app/DashboardScreen';
 import ProfileScreen from '../screens/app/ProfileScreen';
 import AttendanceScreen from '../screens/app/AttendanceScreen';
 import TasksScreen from '../screens/app/TasksScreen';
+import TaskDetailScreen from '../screens/app/TaskDetailScreen';
 import LeaveScreen from '../screens/app/LeaveScreen';
 import AIChatScreen from '../screens/app/AIChatScreen';
 import ProjectsScreen from '../screens/app/ProjectsScreen';
@@ -60,6 +61,11 @@ function AppStack() {
       <Stack.Screen
         name="Projects"
         component={ProjectsScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="TaskDetail"
+        component={TaskDetailScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>

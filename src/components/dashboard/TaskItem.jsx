@@ -1,84 +1,64 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Platform } from 'react-native';
 import Icon from '../Icon/Icon';
 import { spacing, borderRadius } from '../../theme/theme';
 import { useTheme } from '../../context/ThemeContext';
 
-const PRIORITY_CONFIG = {
-  high: { label: 'HIGH PRIORITY', color: '#D32F2F' },      // red – high priority
-  medium: { label: 'MEDIUM', color: '#F57C00' },           // orange – medium
-  low: { label: 'LOW', color: '#689F38' },                 // green – low
-  completed: { label: 'COMPLETED', color: '#388E3C' },
+const PRIORITY = {
+  high:   { label: 'High',   color: '#E53935', bg: '#FFEBEE' },
+  medium: { label: 'Medium', color: '#FB8C00', bg: '#FFF3E0' },
+  low:    { label: 'Low',    color: '#43A047', bg: '#E8F5E9' },
 };
 
-// Status badge colors: Open (grey), In Progress (blue), Closed (green)
-const STATUS_BADGE = {
-  open: { label: 'Open', bg: '#757575', textColor: '#fff' },             // grey – not started
-  in_progress: { label: 'In Progress', bg: '#1976D2', textColor: '#fff' }, // blue – active
-  closed: { label: 'Closed', bg: '#2E7D32', textColor: '#fff' },          // green – done
-  completed: { label: 'Completed', bg: '#2E7D32', textColor: '#fff' },   // same as closed
-  pending: { label: 'Pending', bg: '#ED6C02', textColor: '#fff' },        // orange
-  not_started: { label: 'Not Started', bg: '#757575', textColor: '#fff' },
+const STATUS = {
+  open:        { label: 'Open',        bg: '#ECEFF1', color: '#546E7A' },
+  in_progress: { label: 'In Progress', bg: '#E3F2FD', color: '#1565C0' },
+  closed:      { label: 'Closed',      bg: '#E8F5E9', color: '#2E7D32' },
+  completed:   { label: 'Done',        bg: '#E8F5E9', color: '#2E7D32' },
+  pending:     { label: 'Pending',     bg: '#FFF8E1', color: '#F57F17' },
 };
 
-function getStatusBadge(status, completed) {
-  if (completed) return STATUS_BADGE.closed;
-  if (!status) return STATUS_BADGE.open;
-  const s = String(status).toLowerCase().replace(/-/g, '_').replace(/\s/g, '_');
-  return STATUS_BADGE[s] || { label: String(status), bg: '#757575', textColor: '#fff' };
+function getStatus(status, completed) {
+  if (completed) return STATUS.closed;
+  const s = String(status || 'open').toLowerCase().replace(/[-\s]/g, '_');
+  return STATUS[s] || { label: String(status), bg: '#ECEFF1', color: '#546E7A' };
 }
 
-function TaskItem({
-  title,
-  priority = 'medium',
-  completed = false,
-  status,
-  onPress,
-  onCheckPress,
-  showCheckbox = true,
-}) {
+function getPriority(priority) {
+  return PRIORITY[String(priority || 'medium').toLowerCase()] || PRIORITY.medium;
+}
+
+function TaskItem({ title, priority = 'medium', completed = false, status, onPress }) {
   const { colors } = useTheme();
-  const priorityConfig = PRIORITY_CONFIG[priority] || PRIORITY_CONFIG.medium;
-  const isClosed = completed || status === 'closed' || priority === 'completed';
-  const statusBadge = getStatusBadge(status, isClosed);
+  const p = getPriority(priority);
+  const s = getStatus(status, completed);
 
   return (
-    <Pressable onPress={onPress} style={[styles.card, { backgroundColor: colors.cardBackground }]}>
-      {showCheckbox && (
-        <Pressable
-          onPress={(e) => {
-            e?.stopPropagation?.();
-            onCheckPress?.();
-          }}
-          style={[
-            styles.checkbox,
-            { borderColor: colors.border },
-            isClosed && { backgroundColor: colors.primary, borderColor: colors.primary },
-          ]}
-          hitSlop={8}
-        >
-          {isClosed ? (
-            <Icon name="check" size={16} color={colors.background} />
-          ) : null}
-        </Pressable>
-      )}
-      <View style={styles.content}>
-        <Text style={[styles.title, { color: colors.text }]} numberOfLines={2}>
-          {title}
-        </Text>
-        <View style={styles.tag}>
-          <Text style={[styles.tagText, { color: priorityConfig.color }]}>
-            {priorityConfig.label}
-          </Text>
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.card,
+        { backgroundColor: colors.background, borderColor: colors.border },
+        pressed && { opacity: 0.88 },
+      ]}
+    >
+      {/* Priority accent left strip */}
+      <View style={[styles.strip, { backgroundColor: p.color }]} />
+
+      <View style={styles.body}>
+        <Text style={[styles.title, { color: colors.text }]} numberOfLines={2}>{title}</Text>
+        <View style={styles.chips}>
+          <View style={[styles.chip, { backgroundColor: p.bg }]}>
+            <Text style={[styles.chipText, { color: p.color }]}>{p.label}</Text>
+          </View>
         </View>
       </View>
-      <View style={styles.rightRow}>
-        <View style={[styles.statusBadge, { backgroundColor: statusBadge.bg }]}>
-          <Text style={[styles.statusBadgeText, { color: statusBadge.textColor }]}>
-            {statusBadge.label}
-          </Text>
+
+      <View style={styles.right}>
+        <View style={[styles.statusChip, { backgroundColor: s.bg }]}>
+          <Text style={[styles.statusText, { color: s.color }]}>{s.label}</Text>
         </View>
-        <Icon name="chevron-right" size={22} color={colors.placeholder} />
+        <Icon name="chevron-right" size={20} color={colors.border} style={{ marginTop: 4 }} />
       </View>
     </Pressable>
   );
@@ -89,47 +69,56 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: borderRadius.md,
-    padding: spacing.md,
+    borderWidth: 1,
     marginBottom: spacing.sm,
-    minHeight: 80,
+    overflow: 'hidden',
+    minHeight: 72,
+    ...Platform.select({
+      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4 },
+      android: { elevation: 1 },
+    }),
   },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 4,
-    borderWidth: 2,
-    marginRight: spacing.md,
-    justifyContent: 'center',
-    alignItems: 'center',
+  strip: {
+    width: 4,
+    alignSelf: 'stretch',
   },
-  content: {
+  body: {
     flex: 1,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
   },
   title: {
-    fontSize: 15,
-    fontWeight: '500',
-  },
-  tag: {
-    alignSelf: 'flex-start',
-    marginTop: 4,
-  },
-  tagText: {
-    fontSize: 10,
+    fontSize: 14,
     fontWeight: '600',
+    lineHeight: 20,
+    marginBottom: 5,
   },
-  rightRow: {
+  chips: {
     flexDirection: 'row',
-    alignItems: 'center',
+    gap: spacing.xs,
   },
-  statusBadge: {
+  chip: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  chipText: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  right: {
+    alignItems: 'center',
+    paddingRight: spacing.sm,
+    gap: 2,
+  },
+  statusChip: {
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 12,
-    marginRight: spacing.sm,
+    borderRadius: 8,
   },
-  statusBadgeText: {
-    fontSize: 11,
-    fontWeight: '600',
+  statusText: {
+    fontSize: 10,
+    fontWeight: '700',
   },
 });
 

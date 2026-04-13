@@ -13,6 +13,8 @@ export const initialState = {
   detailLoading: false,
   detailError: null,
   statusUpdating: false,
+  commentSubmitting: false,
+  commitSubmitting: false,
 };
 
 export const TaskState = () => {
@@ -148,6 +150,44 @@ export const TaskState = () => {
     }
   };
 
+  const createComment = async (taskId, content) => {
+    if (!taskId || !content) return { success: false, error: 'Invalid input' };
+    try {
+      if (!token) return { success: false, error: 'Not authenticated' };
+      dispatch({ type: TaskActions.SET_COMMENT_SUBMITTING, payload: true });
+      const url = `${API_URLS.Task}/${taskId}/comments`;
+      const response = await axios.post(url, { content }, {
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      });
+      const data = response?.data?.data ?? response?.data;
+      dispatch({ type: TaskActions.ADD_COMMENT, payload: data });
+      return { success: true, data };
+    } catch (err) {
+      const message = err?.response?.data?.message ?? err?.message ?? 'Failed to add comment';
+      dispatch({ type: TaskActions.SET_COMMENT_SUBMITTING, payload: false });
+      return { success: false, error: message };
+    }
+  };
+
+  const createCommit = async (taskId, commitData) => {
+    if (!taskId || !commitData) return { success: false, error: 'Invalid input' };
+    try {
+      if (!token) return { success: false, error: 'Not authenticated' };
+      dispatch({ type: TaskActions.SET_COMMIT_SUBMITTING, payload: true });
+      const url = `${API_URLS.Task}/${taskId}/commits`;
+      const response = await axios.post(url, commitData, {
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      });
+      const data = response?.data?.data ?? response?.data;
+      dispatch({ type: TaskActions.ADD_COMMIT, payload: data });
+      return { success: true, data };
+    } catch (err) {
+      const message = err?.response?.data?.message ?? err?.message ?? 'Failed to add commit';
+      dispatch({ type: TaskActions.SET_COMMIT_SUBMITTING, payload: false });
+      return { success: false, error: message };
+    }
+  };
+
   const clearTaskDetail = () => {
     dispatch({ type: TaskActions.CLEAR_TASK_DETAIL });
   };
@@ -160,6 +200,8 @@ export const TaskState = () => {
     getTasksByQuery,
     getTaskById,
     updateTaskStatus,
+    createComment,
+    createCommit,
     clearTaskDetail,
     reset,
   };

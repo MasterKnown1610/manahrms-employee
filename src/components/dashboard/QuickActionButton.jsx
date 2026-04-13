@@ -1,56 +1,87 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Platform, Image } from 'react-native';
+import Icon from '../Icon/Icon';
 import { spacing } from '../../theme/theme';
 import { useTheme } from '../../context/ThemeContext';
 
-const BUTTON_SIZE = 56;
-
-function QuickActionButton({ icon, label, onPress, primary = false }) {
+function QuickActionButton({ iconName, isLogo, label, subtitle, onPress, accentColor }) {
   const { colors } = useTheme();
+  const accent = accentColor || colors.primary;
+
   return (
-    <Pressable onPress={onPress} style={styles.wrapper}>
-      <View
-        style={[
-          styles.circle,
-          {
-            backgroundColor: colors.cardBackground,
-            borderColor: colors.border,
-          },
-          primary && { backgroundColor: colors.primary, borderColor: colors.primary },
-        ]}
-      >
-        {icon}
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.card,
+        { backgroundColor: colors.background, borderColor: colors.border },
+        pressed && { opacity: 0.78 },
+      ]}
+    >
+      {/* Left accent bar */}
+      <View style={[styles.accentBar, { backgroundColor: accent }]} />
+
+      {/* Icon circle */}
+      <View style={[styles.iconCircle, { backgroundColor: accent + '18' }]}>
+        {isLogo ? (
+          <Image
+            source={require('../../assets/logo.png')}
+            style={{ width: 22, height: 22 }}
+            resizeMode="contain"
+          />
+        ) : (
+          <Icon name={iconName} size={22} color={accent} />
+        )}
       </View>
-      <Text style={[styles.label, { color: colors.text }]} numberOfLines={1}>
-        {label}
-      </Text>
+
+      {/* Label */}
+      <View style={styles.textWrap}>
+        <Text style={[styles.label, { color: colors.text }]} numberOfLines={1}>{label}</Text>
+        {subtitle ? (
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]} numberOfLines={1}>{subtitle}</Text>
+        ) : null}
+      </View>
     </Pressable>
   );
 }
 
-const CARD_HEIGHT = 100;
-
 const styles = StyleSheet.create({
-  wrapper: {
+  card: {
+    flexDirection: 'row',
     alignItems: 'center',
-    width: 76,
-    height: CARD_HEIGHT,
-    justifyContent: 'flex-start',
+    borderRadius: 14,
+    borderWidth: 1,
+    overflow: 'hidden',
+    paddingVertical: spacing.sm + 2,
+    paddingRight: spacing.sm,
+    gap: spacing.sm,
+    ...Platform.select({
+      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 6 },
+      android: { elevation: 2 },
+    }),
   },
-  circle: {
-    width: BUTTON_SIZE,
-    height: BUTTON_SIZE,
-    borderRadius: BUTTON_SIZE / 2,
+  accentBar: {
+    width: 4,
+    alignSelf: 'stretch',
+  },
+  iconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: spacing.sm,
-    borderWidth: 1,
+  },
+  textWrap: {
+    flex: 1,
   },
   label: {
-    fontSize: 11,
+    fontSize: 13,
+    fontWeight: '700',
+    letterSpacing: -0.1,
+  },
+  subtitle: {
+    fontSize: 10,
+    marginTop: 1,
     fontWeight: '500',
-    textAlign: 'center',
-    width: '100%',
   },
 });
 

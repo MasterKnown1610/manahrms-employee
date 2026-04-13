@@ -114,10 +114,10 @@ function ProfileScreen({ navigation }) {
               { iconName: 'event', label: 'Created At', value: displayData.created_at },
             ]}
           />
-          <ProfileSettingsSecurity
+          {/* <ProfileSettingsSecurity
             onChangePasswordPress={handleChangePassword}
             onNotificationSettingsPress={handleNotificationSettings}
-          />
+          /> */}
         </View>
 
         <ProfileLogoutButton onPress={handleLogout} />

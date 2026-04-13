@@ -1,145 +1,171 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Platform } from 'react-native';
 import Icon from '../Icon/Icon';
 import { spacing, borderRadius } from '../../theme/theme';
 import { useTheme } from '../../context/ThemeContext';
 
-function getPriorityLabel(priority) {
-  if (!priority) return null;
-  const p = String(priority).toLowerCase();
-  if (p === 'high') return 'High';
-  if (p === 'medium') return 'Medium';
-  if (p === 'low') return 'Low';
-  return priority;
+const PRIORITY_CFG = {
+  high:   { label: 'High',   color: '#E53935', bg: '#FFEBEE' },
+  medium: { label: 'Medium', color: '#FB8C00', bg: '#FFF3E0' },
+  low:    { label: 'Low',    color: '#43A047', bg: '#E8F5E9' },
+};
+
+function getPriority(p) {
+  return PRIORITY_CFG[String(p || 'medium').toLowerCase()] || PRIORITY_CFG.medium;
 }
 
-function UpcomingDeadlineCard({
-  title,
-  dueDate,
-  dueLabel,
-  priority,
-  assignedTo,
-  projectOrType,
-  onView,
-}) {
+function getDueLabelStyle(dueLabel) {
+  if (!dueLabel) return { bg: '#ECEFF1', color: '#546E7A' };
+  const l = dueLabel.toLowerCase();
+  if (l === 'overdue') return { bg: '#FFEBEE', color: '#C62828' };
+  if (l === 'due today') return { bg: '#FFF3E0', color: '#E65100' };
+  return { bg: '#E8F5E9', color: '#1B5E20' };
+}
+
+function UpcomingDeadlineCard({ title, dueDate, dueLabel, priority, assignedTo, projectOrType, onView }) {
   const { colors } = useTheme();
-  const priorityLabel = getPriorityLabel(priority);
+  const p = getPriority(priority);
+  const dl = getDueLabelStyle(dueLabel);
 
   return (
-    <View style={[styles.card, { backgroundColor: colors.primary }]}>
-      <View style={styles.topRow}>
-        <Text style={[styles.title, { color: colors.background }]} numberOfLines={1}>
-          {title}
-        </Text>
-        {dueLabel ? (
-          <View style={styles.dueBadge}>
-            <Text style={[styles.dueBadgeText, { color: colors.background }]}>{dueLabel}</Text>
+    <View style={[styles.card, { backgroundColor: colors.background, borderColor: colors.border }]}>
+      {/* Left accent */}
+      <View style={[styles.accent, { backgroundColor: p.color }]} />
+
+      <View style={styles.body}>
+        {/* Title + due label */}
+        <View style={styles.topRow}>
+          <Text style={[styles.title, { color: colors.text }]} numberOfLines={2}>{title}</Text>
+          {dueLabel ? (
+            <View style={[styles.dueBadge, { backgroundColor: dl.bg }]}>
+              <Text style={[styles.dueBadgeText, { color: dl.color }]}>{dueLabel}</Text>
+            </View>
+          ) : null}
+        </View>
+
+        {/* Meta chips */}
+        <View style={styles.metaRow}>
+          <View style={[styles.chip, { backgroundColor: p.bg }]}>
+            <Text style={[styles.chipText, { color: p.color }]}>{p.label}</Text>
           </View>
-        ) : null}
-      </View>
-      <View style={styles.metaRow}>
-        {priorityLabel ? (
-          <View style={[styles.priorityBadge, { backgroundColor: 'rgba(255,255,255,0.25)' }]}>
-            <Text style={[styles.priorityText, { color: colors.background }]}>{priorityLabel}</Text>
+          {(assignedTo || projectOrType) ? (
+            <View style={styles.assignRow}>
+              <Icon name="person-outline" size={13} color={colors.textSecondary} />
+              <Text style={[styles.assignText, { color: colors.textSecondary }]} numberOfLines={1}>
+                {assignedTo ?? projectOrType}
+              </Text>
+            </View>
+          ) : null}
+        </View>
+
+        {/* Date + view button */}
+        <View style={styles.bottomRow}>
+          <View style={styles.dateRow}>
+            <Icon name="event" size={14} color={colors.textSecondary} />
+            <Text style={[styles.dateText, { color: colors.textSecondary }]}>{dueDate}</Text>
           </View>
-        ) : null}
-        {(assignedTo || projectOrType) ? (
-          <Text style={styles.subtitle} numberOfLines={1}>
-            {assignedTo ?? projectOrType}
-          </Text>
-        ) : null}
-      </View>
-      <View style={styles.dateRow}>
-        <Icon name="event" size={16} color={colors.background} />
-        <Text style={[styles.dateText, { color: colors.background }]}>{dueDate}</Text>
-      </View>
-      <View style={styles.bottomRow}>
-        <View style={styles.spacer} />
-        <Pressable onPress={onView} style={[styles.viewButton, { backgroundColor: colors.background }]}>
-          <Text style={[styles.viewButtonText, { color: colors.primary }]}>View</Text>
-        </Pressable>
+          <Pressable
+            onPress={onView}
+            style={[styles.viewBtn, { backgroundColor: colors.primary }]}
+          >
+            <Text style={styles.viewBtnText}>View</Text>
+          </Pressable>
+        </View>
       </View>
     </View>
   );
 }
 
-const CARD_HEIGHT = 160;
-
 const styles = StyleSheet.create({
   card: {
+    flexDirection: 'row',
     borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    minHeight: CARD_HEIGHT,
+    borderWidth: 1,
+    overflow: 'hidden',
+    ...Platform.select({
+      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 8 },
+      android: { elevation: 2 },
+    }),
+  },
+  accent: {
+    width: 5,
+    alignSelf: 'stretch',
+  },
+  body: {
+    flex: 1,
+    padding: spacing.md,
+    gap: spacing.sm,
   },
   topRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: spacing.xs,
+    gap: spacing.sm,
   },
   title: {
-    fontSize: 18,
-    fontWeight: '700',
     flex: 1,
-    marginRight: spacing.sm,
+    fontSize: 15,
+    fontWeight: '700',
+    lineHeight: 21,
   },
   dueBadge: {
-    backgroundColor: 'rgba(255,255,255,0.3)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
   },
   dueBadgeText: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: 10,
+    fontWeight: '700',
   },
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    flexWrap: 'wrap',
     gap: spacing.sm,
-    marginBottom: spacing.sm,
+    flexWrap: 'wrap',
   },
-  priorityBadge: {
+  chip: {
     paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
   },
-  priorityText: {
-    fontSize: 11,
-    fontWeight: '600',
+  chipText: {
+    fontSize: 10,
+    fontWeight: '700',
   },
-  subtitle: {
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.9)',
+  assignRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
     flex: 1,
     minWidth: 0,
+  },
+  assignText: {
+    fontSize: 12,
+    flex: 1,
+  },
+  bottomRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   dateRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: spacing.md,
+    gap: 4,
   },
   dateText: {
-    fontSize: 13,
-    marginLeft: spacing.sm,
+    fontSize: 12,
+    fontWeight: '500',
   },
-  bottomRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
+  viewBtn: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: 6,
+    borderRadius: 8,
   },
-  spacer: {
-    flex: 1,
-  },
-  viewButton: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.md,
-  },
-  viewButtonText: {
-    fontSize: 14,
+  viewBtnText: {
+    fontSize: 12,
     fontWeight: '700',
+    color: '#fff',
   },
 });
 

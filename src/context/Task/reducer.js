@@ -44,6 +44,20 @@ const taskHandlers = {
     detailError: null,
     statusUpdating: false,
   }),
+  ADD_COMMENT: (state, action) => {
+    const detail = state.taskDetail;
+    if (!detail) return state;
+    const comments = Array.isArray(detail.comments) ? [...detail.comments, action.payload] : [action.payload];
+    return { ...state, taskDetail: { ...detail, comments }, commentSubmitting: false };
+  },
+  ADD_COMMIT: (state, action) => {
+    const detail = state.taskDetail;
+    if (!detail) return state;
+    const commits = Array.isArray(detail.commits) ? [...detail.commits, action.payload] : [action.payload];
+    return { ...state, taskDetail: { ...detail, commits }, commitSubmitting: false };
+  },
+  SET_COMMENT_SUBMITTING: (state, action) => ({ ...state, commentSubmitting: action.payload }),
+  SET_COMMIT_SUBMITTING: (state, action) => ({ ...state, commitSubmitting: action.payload }),
   RESET: () => initialState,
 };
 

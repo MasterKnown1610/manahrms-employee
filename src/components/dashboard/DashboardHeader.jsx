@@ -1,39 +1,52 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable, Image } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Icon from '../Icon/Icon';
 import { spacing } from '../../theme/theme';
 import { useTheme } from '../../context/ThemeContext';
 
-function DashboardHeader({
-  userName = 'User',
-  greeting = "Good morning, let's get things done.",
-  profileImageUri,
-  onMenuPress,
-}) {
+function getInitials(name) {
+  if (!name) return 'U';
+  return name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
+}
+
+function getGreetWord() {
+  const h = new Date().getHours();
+  if (h >= 5 && h < 12) return 'Good morning';
+  if (h >= 12 && h < 17) return 'Good afternoon';
+  if (h >= 17 && h < 21) return 'Good evening';
+  return 'Good night';
+}
+
+function getDateShort() {
+  return new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+}
+
+function DashboardHeader({ userName = 'User', onMenuPress, onNotificationPress }) {
   const { colors } = useTheme();
+  const initials = getInitials(userName);
+  const firstName = userName.split(' ')[0];
+
   return (
     <View style={[styles.container, { backgroundColor: colors.primary }]}>
-      <Pressable onPress={onMenuPress} style={styles.iconButton} hitSlop={8}>
-        <Icon name="menu" size={24} color={colors.background} />
+      {/* Menu */}
+      <Pressable onPress={onMenuPress} hitSlop={10} style={styles.iconBtn}>
+        <Icon name="menu" size={24} color="rgba(255,255,255,0.9)" />
       </Pressable>
 
-      <View style={styles.center}>
-        <View style={styles.profileRow}>
-          <View style={styles.avatar}>
-            {profileImageUri ? (
-              <Image source={{ uri: profileImageUri }} style={styles.avatarImage} />
-            ) : (
-              <Icon name="person" size={28} color={colors.background} />
-            )}
-          </View>
-          <View style={styles.greetingBlock}>
-            <Text style={[styles.hello, { color: colors.background }]}>Hello, {userName}</Text>
-            <Text style={styles.subGreetingLight}>{greeting}</Text>
-          </View>
-        </View>
+      {/* Avatar + text */}
+      <View style={[styles.avatar, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+        <Text style={styles.avatarText}>{initials}</Text>
       </View>
 
-      <View style={styles.iconButton} />
+      <View style={styles.textBlock}>
+        <Text style={styles.greetName}>{getGreetWord()}, {firstName} 👋</Text>
+        <Text style={styles.dateLine}>{getDateShort()}</Text>
+      </View>
+
+      {/* Bell */}
+      <Pressable onPress={onNotificationPress} hitSlop={10} style={styles.iconBtn}>
+        <Icon name="notifications-none" size={24} color="rgba(255,255,255,0.9)" />
+      </Pressable>
     </View>
   );
 }
@@ -42,60 +55,45 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm + 4,
+    gap: spacing.sm,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
   },
-  iconButton: {
-    minWidth: 44,
-    minHeight: 44,
+  iconBtn: {
+    width: 40,
+    height: 40,
     justifyContent: 'center',
-    alignItems: 'center',
-  },
-  center: {
-    flex: 1,
-    paddingHorizontal: spacing.sm,
-    minWidth: 0,
-  },
-  profileRow: {
-    flexDirection: 'row',
     alignItems: 'center',
   },
   avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.28)',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: spacing.md,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.35)',
   },
-  avatarImage: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-  },
-  greetingBlock: {
-    flex: 1,
-    minWidth: 0,
-    justifyContent: 'center',
-  },
-  hello: {
-    fontSize: 20,
+  avatarText: {
+    fontSize: 14,
     fontWeight: '700',
-    letterSpacing: 0.2,
+    color: '#fff',
   },
-  subGreeting: {
-    fontSize: 13,
-    marginTop: 2,
+  textBlock: {
+    flex: 1,
   },
-  subGreetingLight: {
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.92)',
-    marginTop: 4,
-    lineHeight: 18,
+  greetName: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#fff',
+    letterSpacing: 0.1,
+  },
+  dateLine: {
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.72)',
+    marginTop: 1,
   },
 });
 

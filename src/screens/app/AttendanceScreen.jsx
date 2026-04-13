@@ -200,9 +200,10 @@ function AttendanceScreen({ navigation }) {
   }, []);
 
   return (
-    <>
-      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.primary }]} edges={['top']} />
-      <AttendanceHeader onBackPress={handleBack} onAddPress={handleAdd} />
+    <View style={[styles.root, { backgroundColor: colors.backgroundInput }]}>
+      <SafeAreaView style={{ backgroundColor: colors.primary }} edges={['top']} />
+      <AttendanceHeader onBackPress={handleBack} />
+
       <View style={styles.contentWrap}>
         {loading ? (
           <View style={styles.centered}>
@@ -224,12 +225,11 @@ function AttendanceScreen({ navigation }) {
             showsVerticalScrollIndicator={false}
           >
             <AttendanceStatusCard
-              dateLabel={formatDateLabel(new Date())}
               onCheckIn={handleCheckIn}
               onCheckOut={handleCheckOut}
               isCheckedIn={isCheckedIn}
-            checkInLoading={loading}
-            checkOutLoading={loading}
+              checkInLoading={loading}
+              checkOutLoading={loading}
               checkInError={error}
               punchInTime={punchInTime}
               punchOutTime={punchOutTime}
@@ -250,12 +250,14 @@ function AttendanceScreen({ navigation }) {
           </ScrollView>
         )}
       </View>
-    </>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {},
+  root: {
+    flex: 1,
+  },
   contentWrap: {
     flex: 1,
   },
@@ -268,6 +270,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
+    paddingTop: spacing.lg,
     paddingBottom: spacing.xl,
     paddingHorizontal: spacing.lg,
   },

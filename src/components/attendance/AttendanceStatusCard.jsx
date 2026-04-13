@@ -1,12 +1,59 @@
-import React from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import React, { useRef } from 'react';
+import { View, Text, StyleSheet, Pressable, Animated } from 'react-native';
 import Icon from '../Icon/Icon';
 import Loader from '../Loader/Loader';
 import { spacing, borderRadius } from '../../theme/theme';
 import { useTheme } from '../../context/ThemeContext';
 
+function TimeBox({ label, time, iconName, accentColor, colors }) {
+  return (
+    <View style={[styles.timeBox, { backgroundColor: colors.backgroundInput }]}>
+      <View style={[styles.timeIconWrap, { backgroundColor: accentColor + '18' }]}>
+        <Icon name={iconName} size={16} color={accentColor} />
+      </View>
+      <Text style={[styles.timeBoxLabel, { color: colors.textSecondary }]}>{label}</Text>
+      {time ? (
+        <Text style={[styles.timeBoxValue, { color: colors.text }]}>{time}</Text>
+      ) : (
+        <Text style={[styles.timeBoxEmpty, { color: colors.placeholder }]}>-- : --</Text>
+      )}
+    </View>
+  );
+}
+
+function PunchButton({ label, iconName, bgColor, onPress, loading, disabled }) {
+  const scale = useRef(new Animated.Value(1)).current;
+
+  const onPressIn = () => {
+    Animated.spring(scale, { toValue: 0.96, useNativeDriver: true, speed: 50 }).start();
+  };
+  const onPressOut = () => {
+    Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 30 }).start();
+  };
+
+  return (
+    <Animated.View style={{ transform: [{ scale }] }}>
+      <Pressable
+        onPress={onPress}
+        onPressIn={onPressIn}
+        onPressOut={onPressOut}
+        disabled={disabled || loading}
+        style={[styles.punchBtn, { backgroundColor: bgColor, opacity: disabled ? 0.6 : 1 }]}
+      >
+        {loading ? (
+          <Loader size="small" color="#fff" />
+        ) : (
+          <>
+            <Icon name={iconName} size={20} color="#fff" />
+            <Text style={styles.punchBtnLabel}>{label}</Text>
+          </>
+        )}
+      </Pressable>
+    </Animated.View>
+  );
+}
+
 function AttendanceStatusCard({
-  dateLabel = 'Today, Oct 24, 2024',
   onCheckIn,
   onCheckOut,
   isCheckedIn = false,
@@ -18,76 +65,85 @@ function AttendanceStatusCard({
   alreadyCheckedOut = false,
 }) {
   const { colors } = useTheme();
-  const statusLabel = alreadyCheckedOut ? 'Present' : isCheckedIn ? 'On duty' : null;
+
+  let statusLabel, statusColor, statusIcon, statusBg;
+  if (alreadyCheckedOut) {
+    statusLabel = 'Present';
+    statusColor = '#2E7D32';
+    statusIcon = 'check-circle';
+    statusBg = '#E8F5E9';
+  } else if (isCheckedIn) {
+    statusLabel = 'On Duty';
+    statusColor = colors.primary;
+    statusIcon = 'work';
+    statusBg = colors.primaryLight;
+  } else {
+    statusLabel = 'Not Checked In';
+    statusColor = '#E65100';
+    statusIcon = 'schedule';
+    statusBg = '#FFF3E0';
+  }
 
   return (
     <View style={[styles.card, { backgroundColor: colors.cardBackground }]}>
-      <View style={styles.topRow}>
-        <Text style={[styles.dateText, { color: colors.textSecondary }]}>{dateLabel}</Text>
-        {statusLabel ? (
-          <View style={[styles.badge, { backgroundColor: colors.primaryLight }, alreadyCheckedOut && { backgroundColor: colors.success }]}>
-            <Text style={[styles.badgeText, { color: colors.primary }, alreadyCheckedOut && { color: colors.background }]}>{statusLabel}</Text>
-          </View>
-        ) : null}
+
+      {/* Status pill */}
+      <View style={[styles.statusPill, { backgroundColor: statusBg }]}>
+        <Icon name={statusIcon} size={14} color={statusColor} />
+        <Text style={[styles.statusPillText, { color: statusColor }]}>{statusLabel}</Text>
       </View>
 
-      <View style={[styles.timesSection, { backgroundColor: colors.backgroundInput }]}>
-        <View style={styles.timeBlock}>
-          <View style={styles.timeRow}>
-            <Icon name="login" size={18} color={colors.primary} />
-            <Text style={[styles.timeLabel, { color: colors.textSecondary }]}>Punch In</Text>
-          </View>
-          {punchInTime ? (
-            <Text style={[styles.timeValue, { color: colors.text }]}>{punchInTime}</Text>
-          ) : !alreadyCheckedOut ? (
-            <Pressable
-              onPress={onCheckIn}
-              style={[styles.inlineButton, styles.checkInButton, { backgroundColor: colors.primary }, checkInLoading && styles.buttonDisabled]}
-              disabled={checkInLoading}
-            >
-              {checkInLoading ? (
-                <Loader size="small" />
-              ) : (
-                <>
-                  <Icon name="schedule" size={20} color={colors.background} />
-                  <Text style={[styles.buttonLabel, { color: colors.background }]}>Check In</Text>
-                </>
-              )}
-            </Pressable>
-          ) : null}
-        </View>
-        <View style={styles.timeBlock}>
-          <View style={styles.timeRow}>
-            <Icon name="logout" size={18} color={colors.primary} />
-            <Text style={[styles.timeLabel, { color: colors.textSecondary }]}>Punch Out</Text>
-          </View>
-          {punchOutTime ? (
-            <Text style={[styles.timeValue, { color: colors.text }]}>{punchOutTime}</Text>
-          ) : isCheckedIn ? (
-            <Pressable
-              onPress={onCheckOut}
-              style={[styles.inlineButton, styles.checkOutButton, { backgroundColor: colors.error }, checkOutLoading && styles.buttonDisabled]}
-              disabled={checkOutLoading}
-            >
-              {checkOutLoading ? (
-                <Loader size="small" />
-              ) : (
-                <>
-                  <Icon name="schedule" size={20} color={colors.background} />
-                  <Text style={[styles.buttonLabel, { color: colors.background }]}>Check Out</Text>
-                </>
-              )}
-            </Pressable>
-          ) : null}
-        </View>
+      {/* Time boxes */}
+      <View style={styles.timesRow}>
+        <TimeBox
+          label="Punch In"
+          time={punchInTime}
+          iconName="login"
+          accentColor="#2E7D32"
+          colors={colors}
+        />
+        <View style={[styles.timeDivider, { backgroundColor: colors.border }]} />
+        <TimeBox
+          label="Punch Out"
+          time={punchOutTime}
+          iconName="logout"
+          accentColor="#C62828"
+          colors={colors}
+        />
       </View>
 
+      {/* Error */}
       {checkInError ? (
-        <Text style={[styles.errorText, { color: colors.error }]}>{checkInError}</Text>
+        <View style={[styles.errorBanner, { backgroundColor: '#FFEBEE' }]}>
+          <Icon name="error-outline" size={14} color="#C62828" />
+          <Text style={styles.errorText}>{checkInError}</Text>
+        </View>
       ) : null}
 
+      {/* Action button */}
+      {!alreadyCheckedOut && !punchInTime && (
+        <PunchButton
+          label="Check In"
+          iconName="login"
+          bgColor="#2E7D32"
+          onPress={onCheckIn}
+          loading={checkInLoading}
+        />
+      )}
+      {isCheckedIn && !alreadyCheckedOut && punchInTime && (
+        <PunchButton
+          label="Check Out"
+          iconName="logout"
+          bgColor={colors.error}
+          onPress={onCheckOut}
+          loading={checkOutLoading}
+        />
+      )}
       {alreadyCheckedOut && (
-        <Text style={[styles.presentNote, { color: colors.textSecondary }]}>You have checked out for today.</Text>
+        <View style={[styles.completedRow, { backgroundColor: '#E8F5E9' }]}>
+          <Icon name="check-circle" size={16} color="#2E7D32" />
+          <Text style={[styles.completedText, { color: '#2E7D32' }]}>Attendance recorded for today</Text>
+        </View>
       )}
     </View>
   );
@@ -95,102 +151,108 @@ function AttendanceStatusCard({
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: borderRadius.lg,
+    borderRadius: 20,
     padding: spacing.lg,
     marginBottom: spacing.lg,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
+    gap: spacing.md,
   },
-  topRow: {
+  statusPill: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  dateText: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  badge: {
-    paddingHorizontal: spacing.sm + 4,
-    paddingVertical: spacing.xs + 2,
+    alignSelf: 'flex-start',
+    gap: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: borderRadius.full,
   },
-  badgeText: {
+  statusPillText: {
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 0.3,
   },
-  timesSection: {
-    flexDirection: 'row',
-    gap: spacing.md,
-    marginBottom: spacing.md,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.sm,
-    borderRadius: borderRadius.md,
-  },
-  timeBlock: {
-    flex: 1,
-  },
-  timeRow: {
+  timesRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    marginBottom: spacing.xs,
   },
-  timeLabel: {
-    fontSize: 13,
-    fontWeight: '500',
+  timeDivider: {
+    width: 1,
+    height: 52,
+    borderRadius: 1,
   },
-  timeValue: {
-    fontSize: 15,
+  timeBox: {
+    flex: 1,
+    borderRadius: 14,
+    padding: spacing.md,
+    gap: 4,
+  },
+  timeIconWrap: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 2,
+  },
+  timeBoxLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    letterSpacing: 0.3,
+  },
+  timeBoxValue: {
+    fontSize: 16,
     fontWeight: '700',
+    letterSpacing: 0.2,
   },
-  inlineButton: {
+  timeBoxEmpty: {
+    fontSize: 16,
+    fontWeight: '600',
+    letterSpacing: 1,
+  },
+  punchBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
     gap: spacing.sm,
-    alignSelf: 'flex-start',
+    paddingVertical: 15,
+    borderRadius: 14,
+  },
+  punchBtnLabel: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#fff',
+    letterSpacing: 0.4,
+  },
+  errorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
   },
   errorText: {
     fontSize: 12,
-    marginBottom: spacing.sm,
+    color: '#C62828',
+    fontWeight: '500',
+    flex: 1,
   },
-  checkInButton: {
+  completedRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: borderRadius.sm,
-    paddingVertical: spacing.md,
-    gap: spacing.sm,
-    marginBottom: spacing.sm,
+    gap: 6,
+    paddingVertical: 12,
+    borderRadius: 14,
   },
-  buttonDisabled: {
-    opacity: 0.7,
-  },
-  checkOutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: borderRadius.sm,
-    paddingVertical: spacing.md,
-    gap: spacing.sm,
-    marginBottom: spacing.sm,
-  },
-  buttonLabel: {
-    fontSize: 15,
-    fontWeight: '700',
-    letterSpacing: 0.3,
-  },
-  presentNote: {
+  completedText: {
     fontSize: 13,
-    marginTop: spacing.xs,
+    fontWeight: '600',
   },
 });
 

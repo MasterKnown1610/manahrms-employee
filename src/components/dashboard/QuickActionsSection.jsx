@@ -1,88 +1,72 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Image } from 'react-native';
-import Icon from '../Icon/Icon';
+import { View, Text, StyleSheet } from 'react-native';
 import { spacing } from '../../theme/theme';
 import { useTheme } from '../../context/ThemeContext';
 import QuickActionButton from './QuickActionButton';
 
-const AI_CHAT_ICON_SIZE = 40;
-
-function buildDefaultActions(colors) {
-  return [
-  {
-    id: 'checkin',
-    icon: <Icon name="fingerprint" size={28} color={colors.primary} />,
-    label: 'Check In/Out',
-    primary: false,
-  },
-  {
-    id: 'leave',
-    icon: <Icon name="event" size={26} color={colors.primary} />,
-    label: 'Apply Leave',
-    primary: false,
-  },
-  {
-    id: 'projects',
-    icon: <Icon name="folder" size={26} color={colors.primary} />,
-    label: 'Projects',
-    primary: false,
-  },
-  {
-    id: 'aichat',
-    icon: (
-      <Image
-        source={require('../../assets/theme.png')}
-        style={{ width: AI_CHAT_ICON_SIZE, height: AI_CHAT_ICON_SIZE }}
-        resizeMode="contain"
-      />
-    ),
-    label: 'AI Chat',
-    primary: false,
-  },
+const ACTIONS = [
+  { id: 'checkin',  iconName: 'fingerprint',    color: '#00897B', label: 'Attendance',  subtitle: 'Check in / out' },
+  { id: 'leave',    iconName: 'beach-access',   color: '#1E88E5', label: 'Apply Leave', subtitle: 'Request time off' },
+  { id: 'projects', iconName: 'folder-special', color: '#FB8C00', label: 'Projects',    subtitle: 'View all projects' },
+  { id: 'aichat',   iconName: null,             color: '#7B1FA2', label: 'AI Chat',     subtitle: 'Ask anything', isLogo: true },
 ];
-}
 
-function QuickActionsSection({ actions, onActionPress }) {
+function QuickActionsSection({ onActionPress }) {
   const { colors } = useTheme();
-  const defaultActions = React.useMemo(() => buildDefaultActions(colors), [colors]);
-  const actionList = actions ?? defaultActions;
+
   return (
     <View style={styles.section}>
-      <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>QUICK ACTIONS</Text>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.actionsRow}
-      >
-        {actionList.map((action) => (
-          <QuickActionButton
-            key={action.id}
-            icon={action.icon}
-            label={action.label}
-            primary={action.primary}
-            onPress={onActionPress ? () => onActionPress(action.id) : undefined}
-          />
+      <View style={styles.titleRow}>
+        <View style={[styles.dot, { backgroundColor: colors.primary }]} />
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Quick Actions</Text>
+      </View>
+
+      <View style={styles.grid}>
+        {ACTIONS.map((action) => (
+          <View key={action.id} style={styles.cell}>
+            <QuickActionButton
+              iconName={action.iconName}
+              isLogo={action.isLogo}
+              label={action.label}
+              subtitle={action.subtitle}
+              accentColor={action.color}
+              onPress={onActionPress ? () => onActionPress(action.id) : undefined}
+            />
+          </View>
         ))}
-      </ScrollView>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   section: {
+    paddingHorizontal: spacing.lg,
     marginBottom: spacing.lg,
   },
-  sectionTitle: {
-    fontSize: 12,
-    fontWeight: '600',
-    letterSpacing: 0.8,
-    marginBottom: spacing.md,
-    paddingHorizontal: spacing.lg,
-  },
-  actionsRow: {
+  titleRow: {
     flexDirection: 'row',
-    paddingHorizontal: spacing.lg,
-    gap: spacing.lg,
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  dot: {
+    width: 4,
+    height: 20,
+    borderRadius: 2,
+  },
+  sectionTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    letterSpacing: -0.2,
+  },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  cell: {
+    width: '48.5%',
   },
 });
 

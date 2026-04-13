@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { spacing } from '../../theme/theme';
 import { useTheme } from '../../context/ThemeContext';
 import UpcomingDeadlineCard from './UpcomingDeadlineCard';
+import Icon from '../Icon/Icon';
 
 function formatDueDate(dueDateStr) {
   if (!dueDateStr) return '—';
@@ -14,16 +15,13 @@ function formatDueDate(dueDateStr) {
 function formatDueLabel(daysUntilDue) {
   if (daysUntilDue === undefined || daysUntilDue === null) return null;
   const n = Number(daysUntilDue);
+  if (n < 0) return 'Overdue';
   if (n === 0) return 'Due today';
   if (n === 1) return 'In 1 day';
-  if (n < 0) return 'Overdue';
   return `In ${n} days`;
 }
 
-function UpcomingMeetingsSection({
-  deadlines = [],
-  onDeadlinePress,
-}) {
+function UpcomingMeetingsSection({ deadlines = [], onDeadlinePress }) {
   const { colors } = useTheme();
   const list = Array.isArray(deadlines) ? deadlines : [];
 
@@ -31,17 +29,21 @@ function UpcomingMeetingsSection({
 
   return (
     <View style={styles.section}>
-      <Text style={[styles.sectionTitle, { color: colors.text }]}>Upcoming Deadlines</Text>
-      {list.map((deadline) => (
-        <View key={deadline?.id ?? deadline?.title} style={styles.cardSpacing}>
+      <View style={styles.header}>
+        <View style={[styles.dot, { backgroundColor: '#FB8C00' }]} />
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Upcoming Deadlines</Text>
+      </View>
+
+      {list.map((d) => (
+        <View key={d?.id ?? d?.title} style={styles.cardSpacing}>
           <UpcomingDeadlineCard
-            title={deadline?.title ?? '—'}
-            dueDate={formatDueDate(deadline?.due_date)}
-            dueLabel={formatDueLabel(deadline?.days_until_due) ?? deadline?.dueLabel}
-            priority={deadline?.priority}
-            assignedTo={deadline?.assigned_to_employee_name}
-            projectOrType={deadline?.projectOrType ?? deadline?.project_name}
-            onView={() => onDeadlinePress?.(deadline)}
+            title={d?.title ?? '—'}
+            dueDate={formatDueDate(d?.due_date)}
+            dueLabel={formatDueLabel(d?.days_until_due) ?? d?.dueLabel}
+            priority={d?.priority}
+            assignedTo={d?.assigned_to_employee_name}
+            projectOrType={d?.projectOrType ?? d?.project_name}
+            onView={() => onDeadlinePress?.(d)}
           />
         </View>
       ))}
@@ -53,13 +55,24 @@ const styles = StyleSheet.create({
   section: {
     marginBottom: spacing.xl,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
     marginBottom: spacing.md,
   },
+  dot: {
+    width: 4,
+    height: 20,
+    borderRadius: 2,
+  },
+  sectionTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    letterSpacing: -0.2,
+  },
   cardSpacing: {
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
   },
 });
 

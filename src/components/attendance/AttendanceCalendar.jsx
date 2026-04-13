@@ -4,14 +4,14 @@ import Icon from '../Icon/Icon';
 import { spacing, borderRadius } from '../../theme/theme';
 import { useTheme } from '../../context/ThemeContext';
 
-const DAYS_HEADER = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'];
+const DAYS_HEADER = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
 
 function AttendanceCalendar({
-  markedDates = [], // array of date strings 'YYYY-MM-DD' — present (green)
-  absentDates = [], // array of date strings 'YYYY-MM-DD' — absent (red)
+  markedDates = [],
+  absentDates = [],
   selectedDate,
   onSelectDate,
-  onMonthChange, // (year: number, month: number) => void, month 1-based
+  onMonthChange,
 }) {
   const { colors } = useTheme();
   const [currentMonth, setCurrentMonth] = useState(() => {
@@ -21,9 +21,7 @@ function AttendanceCalendar({
 
   React.useEffect(() => {
     if (typeof onMonthChange !== 'function') return;
-    const y = currentMonth.getFullYear();
-    const m = currentMonth.getMonth() + 1; // 1-based for API
-    onMonthChange(y, m);
+    onMonthChange(currentMonth.getFullYear(), currentMonth.getMonth() + 1);
   }, [currentMonth, onMonthChange]);
 
   const { days, monthLabel } = useMemo(() => {
@@ -31,7 +29,7 @@ function AttendanceCalendar({
     const month = currentMonth.getMonth();
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
-    const startPadding = (firstDay.getDay() + 6) % 7; // Monday = 0
+    const startPadding = (firstDay.getDay() + 6) % 7;
     const daysInMonth = lastDay.getDate();
     const now = new Date();
     const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
@@ -45,121 +43,151 @@ function AttendanceCalendar({
       const isToday = dateStr === todayStr;
       const isFuture = dateStr > todayStr;
       const isPresent = markedDates.includes(dateStr);
-      const isAbsent = !isFuture && (absentDates.includes(dateStr) || (isToday && !isPresent));
+      const isAbsent = !isFuture && !isPresent && absentDates.includes(dateStr);
+      const isWeekend = (() => {
+        const dow = new Date(dateStr).getDay(); // 0=Sun, 6=Sat
+        return dow === 0 || dow === 6;
+      })();
       const isSelected =
         selectedDate &&
         selectedDate.getFullYear() === year &&
         selectedDate.getMonth() === month &&
         selectedDate.getDate() === d;
-      days.push({
-        type: 'day',
-        key: dateStr,
-        day: d,
-        dateStr,
-        isPresent,
-        isAbsent,
-        isFuture,
-        isSelected,
-      });
+      days.push({ type: 'day', key: dateStr, day: d, dateStr, isPresent, isAbsent, isFuture, isSelected, isToday, isWeekend });
     }
-    const monthLabel = currentMonth.toLocaleDateString('en-US', {
-      month: 'long',
-      year: 'numeric',
-    });
+    const monthLabel = currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
     return { days, monthLabel };
   }, [currentMonth, selectedDate, markedDates, absentDates]);
 
   const goPrev = () => {
     setCurrentMonth((m) => {
       const next = new Date(m.getFullYear(), m.getMonth() - 1, 1);
-      if (typeof onMonthChange === 'function') {
-        onMonthChange(next.getFullYear(), next.getMonth() + 1);
-      }
+      onMonthChange?.(next.getFullYear(), next.getMonth() + 1);
       return next;
     });
   };
   const goNext = () => {
     setCurrentMonth((m) => {
       const next = new Date(m.getFullYear(), m.getMonth() + 1, 1);
-      if (typeof onMonthChange === 'function') {
-        onMonthChange(next.getFullYear(), next.getMonth() + 1);
-      }
+      onMonthChange?.(next.getFullYear(), next.getMonth() + 1);
       return next;
     });
   };
 
-  const handleDayPress = (item) => {
-    if (item.type !== 'day') return;
-    onSelectDate?.(new Date(item.dateStr));
-  };
-
   return (
     <View style={[styles.card, { backgroundColor: colors.cardBackground }]}>
+      {/* Month navigation */}
       <View style={styles.monthRow}>
-        <Pressable onPress={goPrev} style={styles.arrow} hitSlop={8}>
-          <Icon name="chevron-left" size={24} color={colors.primary} />
+        <Pressable onPress={goPrev} style={[styles.navBtn, { backgroundColor: colors.backgroundInput }]} hitSlop={8}>
+          <Icon name="chevron-left" size={20} color={colors.primary} />
         </Pressable>
         <Text style={[styles.monthLabel, { color: colors.text }]}>{monthLabel}</Text>
-        <Pressable onPress={goNext} style={styles.arrow} hitSlop={8}>
-          <Icon name="chevron-right" size={24} color={colors.primary} />
+        <Pressable onPress={goNext} style={[styles.navBtn, { backgroundColor: colors.backgroundInput }]} hitSlop={8}>
+          <Icon name="chevron-right" size={20} color={colors.primary} />
         </Pressable>
       </View>
+
+      {/* Day headers */}
       <View style={styles.weekRow}>
-        {DAYS_HEADER.map((d) => (
-          <Text key={d} style={[styles.weekDay, { color: colors.textSecondary }]}>{d}</Text>
+        {DAYS_HEADER.map((d, i) => (
+          <Text
+            key={d}
+            style={[
+              styles.weekDay,
+              { color: i >= 5 ? colors.priorityMedium : colors.textSecondary },
+            ]}
+          >
+            {d}
+          </Text>
         ))}
       </View>
+
+      {/* Day grid */}
       <View style={styles.grid}>
         {days.map((item) => {
           if (item.type === 'pad') {
             return <View key={item.key} style={styles.cell} />;
           }
+
+          // Determine circle fill
+          let circleBg = 'transparent';
+          let textColor = item.isFuture
+            ? colors.placeholder
+            : item.isWeekend
+            ? colors.textSecondary
+            : colors.text;
+          let borderColor = 'transparent';
+
+          if (item.isPresent) {
+            circleBg = '#2E7D32';
+            textColor = '#fff';
+          } else if (item.isAbsent) {
+            circleBg = '#C6282818';
+            textColor = '#C62828';
+            borderColor = '#C6282830';
+          } else if (item.isToday) {
+            borderColor = colors.primary;
+            textColor = colors.primary;
+          }
+
+          if (item.isSelected && !item.isPresent) {
+            circleBg = colors.primaryLight;
+            textColor = colors.primary;
+          }
+
           return (
             <Pressable
               key={item.key}
-              onPress={() => handleDayPress(item)}
-              style={[
-                styles.cell,
-                styles.cellDay,
-                item.isSelected && { backgroundColor: colors.primaryLight, borderRadius: borderRadius.sm },
-              ]}
+              onPress={() => onSelectDate?.(new Date(item.dateStr))}
+              style={styles.cell}
             >
-              <Text
+              <View
                 style={[
-                  styles.cellDayText,
-                  { color: colors.text },
-                  item.isSelected && { color: colors.primary, fontWeight: '700' },
-                  item.isPresent && { color: colors.success },
-                  item.isAbsent && { color: colors.error },
-                  item.isFuture && { color: colors.textSecondary },
+                  styles.circle,
+                  { backgroundColor: circleBg, borderColor, borderWidth: borderColor !== 'transparent' ? 1.5 : 0 },
                 ]}
               >
-                {item.day}
-              </Text>
-              {(item.isPresent || item.isAbsent || item.isFuture) && (
-                <View
-                  style={[
-                    styles.dot,
-                    item.isSelected && { backgroundColor: colors.primary },
-                    item.isPresent && { backgroundColor: colors.success },
-                    item.isAbsent && { backgroundColor: colors.error },
-                    item.isFuture && { backgroundColor: colors.textSecondary },
-                  ]}
-                />
-              )}
+                <Text style={[styles.dayText, { color: textColor, fontWeight: item.isToday || item.isPresent ? '700' : '500' }]}>
+                  {item.day}
+                </Text>
+              </View>
             </Pressable>
           );
         })}
       </View>
+
+      {/* Legend */}
+      <View style={styles.legend}>
+        <LegendDot color="#2E7D32" label="Present" />
+        <LegendDot color="#C62828" label="Absent" fill={false} />
+        <LegendDot color={colors.primary} label="Today" fill={false} />
+      </View>
+    </View>
+  );
+}
+
+function LegendDot({ color, label, fill = true }) {
+  return (
+    <View style={styles.legendItem}>
+      <View style={[
+        styles.legendDot,
+        fill ? { backgroundColor: color } : { borderColor: color, borderWidth: 1.5, backgroundColor: 'transparent' },
+      ]} />
+      <Text style={styles.legendText}>{label}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
+    borderRadius: 20,
+    padding: spacing.lg,
     marginBottom: spacing.lg,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 3,
   },
   monthRow: {
     flexDirection: 'row',
@@ -167,12 +195,17 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: spacing.md,
   },
-  arrow: {
-    padding: spacing.xs,
+  navBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   monthLabel: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
+    letterSpacing: 0.2,
   },
   weekRow: {
     flexDirection: 'row',
@@ -180,7 +213,7 @@ const styles = StyleSheet.create({
   },
   weekDay: {
     flex: 1,
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '600',
     textAlign: 'center',
   },
@@ -193,19 +226,41 @@ const styles = StyleSheet.create({
     aspectRatio: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingVertical: 2,
   },
-  cellDay: {
-    paddingVertical: 4,
+  circle: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  cellDayText: {
-    fontSize: 14,
+  dayText: {
+    fontSize: 13,
+  },
+  legend: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: spacing.lg,
+    marginTop: spacing.md,
+    paddingTop: spacing.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: '#E0E0E0',
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  legendDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  legendText: {
+    fontSize: 11,
+    color: '#888',
     fontWeight: '500',
-  },
-  dot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    marginTop: 2,
   },
 });
 

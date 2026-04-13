@@ -8,7 +8,6 @@ import {
   SearchFilterBar,
   TaskFilterTabs,
   TaskCard,
-  TaskDetailsModal,
   ProjectFilterModal,
   TasksFAB,
 } from '../../components/tasks';
@@ -26,22 +25,14 @@ function TasksScreen({ navigation, route }) {
     task: {
       getTasks,
       getTasksByQuery,
-      getTaskById,
-      updateTaskStatus,
-      clearTaskDetail,
       tasks,
       loading,
       error,
-      taskDetail,
-      detailLoading,
-      detailError,
-      statusUpdating,
     } = {},
   } = useContext(Context);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('all');
-  const [detailsTaskId, setDetailsTaskId] = useState(null);
   const [isProjectModalVisible, setIsProjectModalVisible] = useState(false);
 
   const tabToApiStatus = {
@@ -153,28 +144,9 @@ function TasksScreen({ navigation, route }) {
   );
   const handleViewDetails = (task) => {
     if (task?.id) {
-      setDetailsTaskId(task.id);
-      if (typeof getTaskById === 'function') {
-        getTaskById(task.id);
-      }
+      navigation.navigate('TaskDetail', { taskId: task.id });
     }
   };
-  const handleCloseDetails = () => {
-    setDetailsTaskId(null);
-    if (typeof clearTaskDetail === 'function') {
-      clearTaskDetail();
-    }
-  };
-  const handleUpdateStatus = useCallback(
-    async (taskId, status) => {
-      if (typeof updateTaskStatus !== 'function') return;
-      const result = await updateTaskStatus(taskId, status);
-      if (result?.success) {
-        fetchTasksForTab(activeTab);
-      }
-    },
-    [updateTaskStatus, activeTab, fetchTasksForTab]
-  );
   const handleStart = (task) => {};
   const handleAddTask = () => {};
 
@@ -239,16 +211,6 @@ function TasksScreen({ navigation, route }) {
           </View>
         )}
       </ScrollView>
-
-      <TaskDetailsModal
-        visible={detailsTaskId != null}
-        onClose={handleCloseDetails}
-        task={taskDetail}
-        loading={detailLoading}
-        error={detailError}
-        statusUpdating={statusUpdating}
-        onUpdateStatus={handleUpdateStatus}
-      />
 
       <ProjectFilterModal
         visible={isProjectModalVisible}

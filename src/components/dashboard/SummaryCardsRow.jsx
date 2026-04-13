@@ -6,130 +6,105 @@ import { spacing } from '../../theme/theme';
 import { useTheme } from '../../context/ThemeContext';
 
 const CARD_CONFIG = [
-  { id: 'my-tasks', icon: 'assignment', color: '#7B1FA2', label: 'My Tasks', valueKeys: ['myTasks', 'my_tasks', 'totalTasks'] },
-  { id: 'todays-status', icon: 'schedule', color: '#4CAF50', label: "Today's Status", valueKeys: ['todayStatus', 'todays_status', 'attendanceStatus', 'checkInStatus'] },
-  { id: 'leave-balance', icon: 'event', color: '#2196F3', label: 'Leave Balance', valueKeys: ['leaveBalance', 'leave_balance'] },
-  { id: 'open-tasks', icon: 'more-horiz', color: '#FF9800', label: 'Open Tasks', valueKeys: ['openTasks', 'open_tasks'] },
-  { id: 'in-progress', icon: 'schedule', color: '#2196F3', label: 'In Progress', valueKeys: ['inProgress', 'in_progress'] },
-  { id: 'completed', icon: 'check-circle', color: '#4CAF50', label: 'Completed', valueKeys: ['completed'] },
+  { id: 'my-tasks',      icon: 'assignment',   color: '#7B1FA2', label: 'My Tasks',      valueKeys: ['myTasks', 'my_tasks', 'totalTasks'] },
+  { id: 'todays-status', icon: 'fingerprint',  color: '#00897B', label: "Today's Status", valueKeys: ['todayStatus', 'todays_status', 'attendanceStatus'] },
+  { id: 'leave-balance', icon: 'beach-access', color: '#1E88E5', label: 'Leave Balance',  valueKeys: ['leaveBalance', 'leave_balance'] },
+  { id: 'open-tasks',    icon: 'pending-actions', color: '#F4511E', label: 'Open Tasks',  valueKeys: ['openTasks', 'open_tasks'] },
+  { id: 'in-progress',   icon: 'autorenew',    color: '#FB8C00', label: 'In Progress',    valueKeys: ['inProgress', 'in_progress'] },
+  { id: 'completed',     icon: 'check-circle', color: '#43A047', label: 'Completed',      valueKeys: ['completed'] },
 ];
 
 const ADMIN_CARD_CONFIG = [
-  { id: 'total-employees', icon: 'people', color: '#2196F3', label: 'Total Employees', valueKey: 'total_employees' },
-  { id: 'active-employees', icon: 'person', color: '#4CAF50', label: 'Active Employees', valueKey: 'active_employees' },
-  { id: 'total-departments', icon: 'business', color: '#7B1FA2', label: 'Departments', valueKey: 'total_departments' },
-  { id: 'total-projects', icon: 'work', color: '#FF9800', label: 'Projects', valueKey: 'total_projects' },
-  { id: 'active-projects', icon: 'folder', color: '#4CAF50', label: 'Active Projects', valueKey: 'active_projects' },
-  { id: 'total-tasks', icon: 'assignment', color: '#7B1FA2', label: 'Total Tasks', valueKey: 'total_tasks' },
-  { id: 'open-tasks', icon: 'more-horiz', color: '#FF9800', label: 'Open Tasks', valueKey: 'open_tasks' },
-  { id: 'in-progress-tasks', icon: 'schedule', color: '#2196F3', label: 'In Progress', valueKey: 'in_progress_tasks' },
-  { id: 'closed-tasks', icon: 'check-circle', color: '#4CAF50', label: 'Closed Tasks', valueKey: 'closed_tasks' },
-  { id: 'overdue-tasks', icon: 'warning', color: '#f44336', label: 'Overdue Tasks', valueKey: 'overdue_tasks' },
-  { id: 'pending-leave', icon: 'event', color: '#2196F3', label: 'Pending Leave', valueKey: 'pending_leave_requests' },
+  { id: 'total-employees',   icon: 'people',        color: '#1E88E5', label: 'Employees',      valueKey: 'total_employees' },
+  { id: 'active-employees',  icon: 'person',        color: '#43A047', label: 'Active',          valueKey: 'active_employees' },
+  { id: 'total-departments', icon: 'business',      color: '#7B1FA2', label: 'Departments',     valueKey: 'total_departments' },
+  { id: 'total-projects',    icon: 'work',          color: '#FB8C00', label: 'Projects',        valueKey: 'total_projects' },
+  { id: 'open-tasks',        icon: 'pending-actions', color: '#F4511E', label: 'Open Tasks',    valueKey: 'open_tasks' },
+  { id: 'in-progress-tasks', icon: 'autorenew',     color: '#FB8C00', label: 'In Progress',    valueKey: 'in_progress_tasks' },
+  { id: 'closed-tasks',      icon: 'check-circle',  color: '#43A047', label: 'Closed',         valueKey: 'closed_tasks' },
+  { id: 'overdue-tasks',     icon: 'warning',       color: '#E53935', label: 'Overdue',        valueKey: 'overdue_tasks' },
+  { id: 'pending-leave',     icon: 'beach-access',  color: '#1E88E5', label: 'Pending Leave',  valueKey: 'pending_leave_requests' },
 ];
 
 const DEFAULT_VALUES = {
-  'my-tasks': '0',
-  'todays-status': '—',
-  'leave-balance': '0 days',
-  'open-tasks': '0',
-  'in-progress': '0',
-  'completed': '0',
+  'my-tasks': '0', 'todays-status': '—', 'leave-balance': '0 days',
+  'open-tasks': '0', 'in-progress': '0', 'completed': '0',
 };
 
-function isAdminDashboard(dashboard) {
-  return dashboard?.overview != null;
-}
+function isAdminDashboard(dashboard) { return dashboard?.overview != null; }
 
 function getValueFromDashboard(dashboard, valueKeys) {
   const source = dashboard?.summary ?? dashboard ?? {};
   for (const key of valueKeys) {
     const v = source[key];
-    if (v !== undefined && v !== null && v !== '') return typeof v === 'number' ? String(v) : String(v);
+    if (v !== undefined && v !== null && v !== '') return String(v);
   }
   return null;
 }
 
 function getLeaveBalanceValue(dashboard) {
   const source = dashboard?.summary ?? dashboard ?? {};
-  const leaveBalance = source.leave_balance ?? source.leaveBalance;
-  if (leaveBalance && typeof leaveBalance === 'object' && leaveBalance.total_available_days != null) {
-    const days = Number(leaveBalance.total_available_days);
-    return Number.isFinite(days) ? `${days}${days === 1 ? ' day' : ' days'}` : null;
+  const lb = source.leave_balance ?? source.leaveBalance;
+  if (lb && typeof lb === 'object' && lb.total_available_days != null) {
+    const days = Number(lb.total_available_days);
+    return Number.isFinite(days) ? `${days}d` : null;
   }
   return null;
 }
 
 function getTodaysStatusValue(dashboard) {
   const source = dashboard?.summary ?? dashboard ?? {};
-  const todayStatus = source.today_status ?? source.todays_status ?? source.todayStatus;
-  if (!todayStatus || typeof todayStatus !== 'object') return null;
-  return todayStatus.is_present === true ? 'Present' : 'Absent';
+  const ts = source.today_status ?? source.todays_status ?? source.todayStatus;
+  if (!ts || typeof ts !== 'object') return null;
+  return ts.is_present === true ? 'Present' : 'Absent';
 }
 
-function buildAdminCardsFromDashboard(dashboard) {
+function buildAdminCards(dashboard) {
   const overview = dashboard?.overview ?? {};
-  return ADMIN_CARD_CONFIG.map((config) => {
-    const v = overview[config.valueKey];
-    const value = v !== undefined && v !== null ? String(v) : '0';
-    return {
-      id: config.id,
-      icon: <Icon name={config.icon} size={28} color={config.color} />,
-      label: config.label,
-      value,
-    };
-  });
+  return ADMIN_CARD_CONFIG.map((cfg) => ({
+    id: cfg.id, icon: cfg.icon, color: cfg.color, label: cfg.label,
+    value: overview[cfg.valueKey] !== undefined ? String(overview[cfg.valueKey]) : '0',
+  }));
 }
 
-function buildCardsFromDashboard(dashboard, colors) {
-  if (isAdminDashboard(dashboard)) {
-    return buildAdminCardsFromDashboard(dashboard);
-  }
-  return CARD_CONFIG.map((config) => {
-    let value = null;
-    if (config.id === 'leave-balance') {
-      value = getLeaveBalanceValue(dashboard);
-    } else if (config.id === 'todays-status') {
-      value = getTodaysStatusValue(dashboard);
-    } else {
-      value = getValueFromDashboard(dashboard, config.valueKeys);
+function buildCards(dashboard, colors) {
+  if (isAdminDashboard(dashboard)) return buildAdminCards(dashboard);
+  return CARD_CONFIG.map((cfg) => {
+    let value = cfg.id === 'leave-balance'
+      ? getLeaveBalanceValue(dashboard)
+      : cfg.id === 'todays-status'
+        ? getTodaysStatusValue(dashboard)
+        : getValueFromDashboard(dashboard, cfg.valueKeys);
+    const displayValue = value ?? DEFAULT_VALUES[cfg.id];
+    let valueStyle;
+    if (cfg.id === 'todays-status' && colors) {
+      valueStyle = {
+        fontSize: 15,
+        color: displayValue === 'Present' ? colors.success : displayValue === 'Absent' ? colors.error : colors.textSecondary,
+      };
     }
-    const displayValue = value ?? DEFAULT_VALUES[config.id];
-    const isTodaysStatus = config.id === 'todays-status';
-    const valueStyle = isTodaysStatus && colors
-      ? {
-          fontSize: 14,
-          fontWeight: '700',
-          color: displayValue === 'Present' ? colors.success : displayValue === 'Absent' ? colors.error : colors.textSecondary,
-        }
-      : undefined;
-    return {
-      id: config.id,
-      icon: <Icon name={config.icon} size={28} color={config.color} />,
-      label: config.label,
-      value: displayValue,
-      valueStyle,
-    };
+    return { id: cfg.id, icon: cfg.icon, color: cfg.color, label: cfg.label, value: displayValue, valueStyle };
   });
 }
-
-const COLS = 3;
 
 function SummaryCardsRow({ cards: cardsProp, dashboard, onCardPress }) {
   const { colors } = useTheme();
-  const cards = dashboard != null ? buildCardsFromDashboard(dashboard, colors) : (cardsProp ?? buildCardsFromDashboard(null, colors));
+  const cards = dashboard != null
+    ? buildCards(dashboard, colors)
+    : (cardsProp ?? buildCards(null, colors));
+
   return (
     <View style={styles.container}>
       <View style={styles.grid}>
         {cards.map((card) => (
           <View key={card.id} style={styles.gridItem}>
             <SummaryCard
-              icon={card.icon}
+              icon={<Icon name={card.icon} size={22} color={card.color} />}
               label={card.label}
               value={card.value}
               valueStyle={card.valueStyle}
+              accentColor={card.color}
               onPress={onCardPress ? () => onCardPress(card.id) : undefined}
-              style={styles.cardInGrid}
             />
           </View>
         ))}
@@ -141,25 +116,16 @@ function SummaryCardsRow({ cards: cardsProp, dashboard, onCardPress }) {
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
+    paddingBottom: spacing.sm,
   },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginHorizontal: -spacing.xs,
+    gap: spacing.sm,
   },
   gridItem: {
-    width: `${100 / COLS}%`,
-    paddingHorizontal: spacing.xs,
-    paddingVertical: spacing.xs,
-    height: 120,
-    overflow: 'hidden',
-  },
-  cardInGrid: {
-    width: '100%',
-    height: '100%',
-    marginRight: 0,
-    minHeight: 0,
+    // 2 cols with gap
+    width: '48.5%',
   },
 });
 
